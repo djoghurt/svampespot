@@ -1,0 +1,24 @@
+{
+  "name": "Svampespot Field",
+  "short_name": "Svampespot",
+  "description": "Private field companion for the Svampespot mushroom pilot.",
+  "id": "./",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#143c3a",
+  "theme_color": "#143c3a",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

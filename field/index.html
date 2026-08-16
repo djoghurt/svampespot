@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#143c3a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Svampespot Field</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-180.png">
+  <link rel="stylesheet" href="./vendor/leaflet.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <span class="wordmark">Svampespot</span>
+      <span class="mode">Field pilot</span>
+    </div>
+    <span class="experimental">Experimental</span>
+  </header>
+
+  <main>
+    <section class="map-stage" aria-label="Field map">
+      <div id="map"></div>
+      <div class="aperture" aria-live="polite">
+        <span id="bearing" class="bearing">—</span>
+        <span id="distance" class="distance">Location off</span>
+        <span id="needle" class="needle" aria-hidden="true">↑</span>
+      </div>
+      <button id="locate" class="map-action" type="button">Use my location</button>
+    </section>
+
+    <section class="field-sheet">
+      <div id="emptyState" class="empty-state">
+        <p class="eyebrow">Private field package</p>
+        <h1>Load the visits prepared on your Mac.</h1>
+        <p>The public app contains no predicted locations. Import the blinded package sent to this phone.</p>
+        <button id="importButton" class="primary-action" type="button">Import visits</button>
+      </div>
+
+      <div id="visitState" hidden>
+        <div class="visit-heading">
+          <div>
+            <p id="progress" class="eyebrow"></p>
+            <h1 id="visitTitle">Next forest cell</h1>
+          </div>
+          <span id="visitStatus" class="status-chip">Not started</span>
+        </div>
+
+        <div class="destination-actions">
+          <a id="appleMaps" class="destination-button" href="#" target="_blank" rel="noreferrer">
+            Apple Maps
+          </a>
+          <a id="googleMaps" class="destination-button" href="#" target="_blank" rel="noreferrer">
+            Google Maps
+          </a>
+        </div>
+
+        <div class="timer-block">
+          <span class="timer-label">Timed search</span>
+          <strong id="timer">30:00</strong>
+          <button id="startVisit" class="primary-action" type="button">Start 30-minute search</button>
+          <button id="finishVisit" class="secondary-action" type="button">Record result</button>
+          <button id="replacePair" class="text-action" type="button">Replace pair: access or safety</button>
+        </div>
+
+        <div class="visit-nav">
+          <button id="previousVisit" type="button">Previous</button>
+          <button id="nextVisit" type="button">Next</button>
+          <button id="exportResults" type="button">Export results</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <input id="packageInput" type="file" accept=".json,application/json" hidden>
+
+  <dialog id="resultDialog">
+    <form id="resultForm">
+      <div class="dialog-heading">
+        <p class="eyebrow">Visit result</p>
+        <button id="closeDialog" class="icon-button" type="button" aria-label="Close">×</button>
+      </div>
+      <fieldset>
+        <legend>Did you find tragt-kantarel?</legend>
+        <div class="choice-row">
+          <label><input type="radio" name="detected" value="yes" required><span>Yes</span></label>
+          <label><input type="radio" name="detected" value="no"><span>No</span></label>
+        </div>
+      </fieldset>
+      <label>Fruiting clusters <input name="clusters" type="number" min="0" max="50" value="0"></label>
+      <fieldset>
+        <legend>Other mushrooms seen</legend>
+        <label class="check"><input type="checkbox" name="species" value="Imleria badia">Brun rørhat</label>
+        <label class="check"><input type="checkbox" name="species" value="Hydnum spp.">Pigsvamp</label>
+        <label class="check"><input type="checkbox" name="species" value="Lactarius deterrimus">Gran-mælkehat</label>
+      </fieldset>
+      <div class="field-grid">
+        <label>Dominant trees
+          <select name="tree"><option value="">Not recorded</option><option>Spruce/fir</option><option>Pine</option><option>Beech</option><option>Oak</option><option>Mixed</option></select>
+        </label>
+        <label>Moss cover
+          <select name="moss"><option value="">Not recorded</option><option>Low</option><option>Medium</option><option>High</option></select>
+        </label>
+        <label>Ground wetness
+          <select name="wetness"><option value="">Not recorded</option><option>Dry</option><option>Moist</option><option>Wet</option></select>
+        </label>
+        <label>Weather
+          <select name="weather"><option value="">Not recorded</option><option>Dry</option><option>Light rain</option><option>Rain</option></select>
+        </label>
+      </div>
+      <label>Notes or deviations <textarea name="deviations" rows="3"></textarea></label>
+      <label>Proof photo <input name="photo" type="file" accept="image/*" capture="environment"></label>
+      <button class="primary-action" type="submit">Save result</button>
+    </form>
+  </dialog>
+
+  <dialog id="replacementDialog">
+    <form id="replacementForm">
+      <div class="dialog-heading">
+        <div><p class="eyebrow">Protocol exception</p><h2>Replace this whole pair?</h2></div>
+        <button id="closeReplacement" class="icon-button" type="button" aria-label="Close">×</button>
+      </div>
+      <p>Only replace cells for an access or safety problem, never because of a mushroom result.</p>
+      <label>What prevented the visit?
+        <textarea name="reason" rows="3" required></textarea>
+      </label>
+      <button class="primary-action" type="submit">Record reason and use replacement</button>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./vendor/leaflet.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

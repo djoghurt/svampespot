@@ -1,0 +1,6 @@
+#!/bin/sh
+node scripts/check-public-tree.js || exit 1
+case "$2" in
+  *github.com/djoghurt/svampespot.git|*github.com/djoghurt/svampespot) exit 0 ;;
+  *) echo "Blocked: public shell may only push to djoghurt/svampespot" >&2; exit 1 ;;
+esac

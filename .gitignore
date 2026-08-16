@@ -1,0 +1,12 @@
+*
+!.githooks/
+!.githooks/pre-push
+!.github/
+!.github/workflows/
+!.github/workflows/deploy-field.yml
+!.gitignore
+!README.md
+!field/
+!field/**
+!scripts/
+!scripts/check-public-tree.js
