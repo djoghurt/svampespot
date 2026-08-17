@@ -26,6 +26,7 @@ export function createSpotMode({
   let regions = [];
   let overviewSpots = null;
   let mapSpots = null;
+  let overviewMode = false;
   const weather = new Map();
 
   const currentSpot = () => spotPackage?.spots[index] || null;
@@ -76,6 +77,8 @@ export function createSpotMode({
       }
       return;
     }
+    overviewMode = false;
+    mapSpots = spotPackage.spots;
     index = nextIndex;
     fitAll = false;
     render();
@@ -89,24 +92,35 @@ export function createSpotMode({
     ui.progress.textContent = formatRankSummary(spot, total);
     ui.title.textContent = spot.forest_name || regionInfo?.name || 'Forest area';
     ui.rank.textContent = rankTierLabel(spot.rank_tier);
-    ui.evidence.textContent = overviewSpots?.length
-      ? 'All areas in selected region · representative markers elsewhere · ranks within region'
+    ui.evidence.textContent = overviewSpots?.length && overviewMode
+      ? 'Representative markers across Denmark · choose a marker or region for every ranked area'
+      : overviewSpots?.length
+        ? 'All areas in selected region · ranks within region'
       : 'Relative habitat rank within this region · not a probability';
     ui.regionEvidence.textContent = formatRegionEvidence(regionInfo?.evidence);
     ui.region.value = spotPackage.region;
     const totalAreas = regions.reduce((sum, region) => sum + region.eligible_cells, 0);
-    ui.all.textContent = overviewSpots?.length
-      ? `Show ${regions.length}-region overview · ${totalAreas} areas`
+    ui.all.textContent = overviewSpots?.length && overviewMode
+      ? `Show all ${total} areas in ${regionInfo?.name || 'selected region'}`
+      : overviewSpots?.length
+        ? `Show ${regions.length}-region overview · ${totalAreas} areas`
       : `Show all ${total} areas`;
     ui.previous.disabled = index === 0;
     ui.next.disabled = index === spotPackage.spots.length - 1;
     navigationLinks(spot);
-    fieldMap.showSpots(mapSpots || spotPackage.spots, spot.spot_id, selectSpot, fitAll, publicLand);
+    fieldMap.showSpots(
+      mapSpots || spotPackage.spots,
+      spot.spot_id,
+      selectSpot,
+      fitAll,
+      overviewMode ? null : publicLand,
+    );
     fitAll = false;
     updateWeather(spot);
   }
 
   function activate(value, context = {}) {
+    const wasActive = active;
     active = true;
     publicLand = context.publicLand || null;
     regionInfo = context.regionInfo || null;
@@ -117,14 +131,12 @@ export function createSpotMode({
     if (packageChanged) {
       spotPackage = value;
       index = 0;
-      fitAll = !overviewSpots;
+      if (!wasActive) overviewMode = Boolean(overviewSpots?.length);
+      fitAll = overviewMode || !overviewSpots;
       weather.clear();
     }
     if (packageChanged || overviewChanged) {
-      const otherRegions = overviewSpots?.filter(
-        ({ region }) => region !== value.region,
-      ) || [];
-      mapSpots = [...otherRegions, ...value.spots];
+      mapSpots = overviewMode ? overviewSpots : value.spots;
     }
     ui.state.hidden = false;
     ui.mode.textContent = 'Habitat scout';
@@ -156,14 +168,29 @@ export function createSpotMode({
     if (spotPackage) ui.region.value = spotPackage.region;
   }
 
+  function showRegionDetail(spotId = null) {
+    overviewMode = false;
+    mapSpots = spotPackage.spots;
+    fitAll = !spotId;
+    render();
+    if (spotId) selectSpot(spotId);
+  }
+
   ui.previous.addEventListener('click', () => selectSpot(spotPackage.spots[index - 1].spot_id));
   ui.next.addEventListener('click', () => selectSpot(spotPackage.spots[index + 1].spot_id));
-  ui.all.addEventListener('click', () => { fitAll = true; render(); });
+  ui.all.addEventListener('click', () => {
+    if (overviewSpots?.length) {
+      overviewMode = !overviewMode;
+      mapSpots = overviewMode ? overviewSpots : spotPackage.spots;
+    }
+    fitAll = true;
+    render();
+  });
   ui.change.addEventListener('click', () => packageInput.click());
   ui.region.addEventListener('change', () => onRegionChanged(ui.region.value));
 
   return {
-    activate, deactivate, currentCenter, restoreRegionSelection, selectSpot,
+    activate, deactivate, currentCenter, restoreRegionSelection, selectSpot, showRegionDetail,
     setRegionLoading, setRegions,
   };
 }

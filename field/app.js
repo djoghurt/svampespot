@@ -12,9 +12,9 @@ import {
   loadRegionManifest,
   loadRegionPublicLand,
   loadRegionSpotPackage,
-} from './default-spots.js?v=2026-08-17-8';
+} from './default-spots.js?v=2026-08-17-9';
 import { createFieldMap } from './map.js';
-import { createSpotMode } from './spot-mode.js?v=2026-08-17-8';
+import { createSpotMode } from './spot-mode.js?v=2026-08-17-9';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
 
 const element = (id) => document.getElementById(id);
@@ -194,7 +194,7 @@ async function switchRegion(region, spotId = null) {
     state.publicLand = publicLand;
     await saveState('package', publishedPackage);
     render();
-    if (spotId) spotMode.selectSpot(spotId);
+    spotMode.showRegionDetail(spotId);
     showToast(`${regionInfo.name} loaded · ${regionInfo.eligible_cells} ranked areas.`);
   } catch (error) {
     showToast(error.message);
@@ -363,14 +363,17 @@ async function initialize() {
     requestLocation(true);
     state.timerId = setInterval(tick, 1000);
   }
-  render();
-  if (state.package?.package_type === 'ranked_spots') {
-    loadDenmarkOverview().catch(() => {
+  if (state.package?.package_type === 'ranked_spots'
+    && state.regionManifest?.regions.length) {
+    await loadDenmarkOverview().catch(() => {
+      render();
       showToast('Some regions could not be loaded. The selected region still works.');
     });
+  } else {
+    render();
   }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=2026-08-17-8', {
+    navigator.serviceWorker.register('./sw.js?v=2026-08-17-9', {
       updateViaCache: 'none',
     }).then((registration) => registration.update()).catch(() => {});
   }
