@@ -1,17 +1,17 @@
-const CACHE = 'svampespot-field-v28';
+const CACHE = 'svampespot-field-v29';
 const SHELL = [
   './',
   './index.html',
-  './app.js?v=2026-08-17-23',
+  './app.js?v=2026-08-17-24',
   './core.js',
-  './default-spots.js?v=2026-08-17-23',
-  './map.js?v=2026-08-17-23',
-  './map-modes.js?v=2026-08-17-23',
-  './rank-display.js?v=2026-08-17-23',
-  './spot-mode.js?v=2026-08-17-23',
+  './default-spots.js?v=2026-08-17-24',
+  './map.js?v=2026-08-17-24',
+  './map-modes.js?v=2026-08-17-24',
+  './rank-display.js?v=2026-08-17-24',
+  './spot-mode.js?v=2026-08-17-24',
   './storage.js',
-  './styles.css?v=2026-08-17-23',
-  './spot-styles.css?v=2026-08-17-23',
+  './styles.css?v=2026-08-17-24',
+  './spot-styles.css?v=2026-08-17-24',
   './weather.js',
   './spots/regions.json',
   './spots/silkeborg.json',
@@ -38,8 +38,6 @@ self.addEventListener('activate', (event) => {
     const keys = await caches.keys();
     await Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)));
     await self.clients.claim();
-    const windows = await self.clients.matchAll({ type: 'window' });
-    await Promise.all(windows.map((client) => client.navigate(client.url)));
   })());
 });
 
