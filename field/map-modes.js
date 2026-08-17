@@ -40,9 +40,9 @@ export function mapModePresentation(mode) {
 }
 
 const CURRENT_POTENTIAL_COLOURS = Object.freeze({
-  strong: '#18845f',
-  promising: '#e0a12f',
-  low: '#a85b4e',
+  strong: '#e23d28',
+  promising: '#e9d758',
+  low: '#7b4ab2',
 });
 
 const clamp = (value) => Math.max(0, Math.min(1, value));

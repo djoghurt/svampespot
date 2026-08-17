@@ -38,9 +38,9 @@
 }
 .potential-legend { width: 154px; }
 .potential-swatch { width: 18px; height: 9px; border-radius: 2px; }
-.potential-swatch.strong { background: #18845f; }
-.potential-swatch.promising { background: #e0a12f; }
-.potential-swatch.low { background: #a85b4e; }
+.potential-swatch.strong { background: #e23d28; }
+.potential-swatch.promising { background: #e9d758; }
+.potential-swatch.low { background: #7b4ab2; }
 .potential-legend .legend-note {
   display: block;
   margin-top: 2px;
@@ -115,9 +115,9 @@
   white-space: nowrap;
 }
 .moisture-legend span { margin-top: 1px; color: #c9e5f1; font-size: .56rem; font-weight: 550; }
-.map-mode-badge[data-tier="strong"] { background: rgb(18 111 78 / 94%); }
-.map-mode-badge[data-tier="promising"] { color: #152a25; background: rgb(239 181 63 / 95%); }
-.map-mode-badge[data-tier="low"] { background: rgb(145 69 58 / 94%); }
+.map-mode-badge[data-tier="strong"] { background: rgb(198 48 34 / 95%); }
+.map-mode-badge[data-tier="promising"] { color: #24302d; background: rgb(233 215 88 / 96%); }
+.map-mode-badge[data-tier="low"] { background: rgb(111 63 157 / 95%); }
 
 .rain-card {
   margin: 16px 0;
