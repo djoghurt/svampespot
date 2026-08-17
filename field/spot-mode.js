@@ -3,10 +3,10 @@ import {
 } from './weather.js';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, currentPotentialPresentation, mapModePresentation,
-} from './map-modes.js?v=2026-08-17-25';
+} from './map-modes.js?v=2026-08-17-26';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-25';
+} from './rank-display.js?v=2026-08-17-26';
 
 const element = (id) => document.getElementById(id);
 

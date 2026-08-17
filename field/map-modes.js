@@ -52,7 +52,7 @@ export function currentPotentialForSpot(spot, weather) {
   const moisture = Number(weather?.moisture_factor);
   if (!Number.isFinite(topPercent) || topPercent < 1 || topPercent > 100
     || !Number.isFinite(moisture)) return null;
-  const habitat = 1 - (clamp((topPercent - 1) / 99) * 0.6);
+  const habitat = 1 - clamp((topPercent - 1) / 99);
   const score = Math.round(100 * habitat * clamp(moisture));
   const tier = score >= 70 ? 'strong' : score >= 40 ? 'promising' : 'low';
   const label = tier === 'strong' ? 'Strong now'
