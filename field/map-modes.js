@@ -1,16 +1,16 @@
 export const MAP_MODES = Object.freeze({
-  bestNow: 'best-now',
+  currentPotential: 'current-potential',
   habitat: 'habitat',
   recentMoisture: 'recent-moisture',
 });
 
-export const DEFAULT_MAP_MODE = MAP_MODES.bestNow;
+export const DEFAULT_MAP_MODE = MAP_MODES.currentPotential;
 
 const PRESENTATIONS = Object.freeze({
-  [MAP_MODES.bestNow]: Object.freeze({
-    modeLabel: 'Best now',
-    noticeTitle: 'Best now unavailable',
-    noticeBody: 'The regional timing model has not passed its frozen evaluation yet. Habitat remains available.',
+  [MAP_MODES.currentPotential]: Object.freeze({
+    modeLabel: 'Current potential',
+    noticeTitle: 'The source maps work. The combined score is not validated yet.',
+    noticeBody: 'Current potential needs a tested rule for combining habitat and recent weather. Until that passes evaluation, use the two source maps separately.',
     showNotice: true,
     showRain: false,
     allowNavigation: false,

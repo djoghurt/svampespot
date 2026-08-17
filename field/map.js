@@ -1,5 +1,5 @@
-import { MAP_MODES, moistureOverlayStyle } from './map-modes.js?v=2026-08-17-15';
-import { rankTierStyle } from './rank-display.js?v=2026-08-17-15';
+import { MAP_MODES, moistureOverlayStyle } from './map-modes.js?v=2026-08-17-16';
+import { rankTierStyle } from './rank-display.js?v=2026-08-17-16';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })
@@ -27,7 +27,7 @@ export function createFieldMap(element) {
   let locationMarker;
   let weatherLayer;
   let viewChangeTimer;
-  let displayMode = MAP_MODES.bestNow;
+  let displayMode = MAP_MODES.currentPotential;
   const spotRenderer = L.canvas({ padding: 0.5 });
 
   function clearVisitTargets() {

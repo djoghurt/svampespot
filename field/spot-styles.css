@@ -40,7 +40,7 @@
 
 .map-lens {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.35fr;
+  grid-template-columns: 1.3fr .8fr 1.3fr;
   gap: 4px;
   margin: -7px 0 18px;
   padding: 4px;
@@ -71,13 +71,43 @@
   background: #f7efec;
 }
 .map-mode-notice h2 { margin: 4px 0 5px; font-size: 1.08rem; }
-.map-mode-notice > p:last-child { margin: 0; color: #5d6965; font-size: .77rem; }
+#mapModeNoticeBody { margin: 0; color: #5d6965; font-size: .77rem; }
+.signal-status {
+  display: grid;
+  gap: 7px;
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid #e3cfc9;
+}
+.signal-status > div { display: flex; justify-content: space-between; gap: 12px; }
+.signal-status span { color: #4f5f5a; font-size: .72rem; }
+.signal-status strong { color: #28705d; font-size: .72rem; }
+.signal-status strong::before { content: '●'; margin-right: 5px; font-size: .62rem; }
+.signal-status .pending { color: #a84334; }
+.potential-scale {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 14px;
+  opacity: .62;
+}
+.potential-scale span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .67rem;
+  font-weight: 680;
+}
+.potential-scale i { width: 9px; height: 9px; border-radius: 50%; background: #398a68; }
+.potential-scale .promising i { background: #e1a23d; }
+.potential-scale .weak i { background: #b96956; }
+.scale-note { margin: 7px 0 0; color: #776c68; font-size: .65rem; }
 #spotState[data-map-mode="recent-moisture"] .map-mode-notice {
   border-color: #c4dce8;
   border-left-color: #2785c7;
   background: #edf6fa;
 }
-#spotState[data-map-mode="best-now"] .visit-heading { opacity: .62; }
+#spotState[data-map-mode="current-potential"] .visit-heading { opacity: .62; }
 .map-mode-badge, .moisture-legend {
   position: absolute;
   z-index: 500;
@@ -104,7 +134,7 @@
 }
 .moisture-legend span { margin-top: 1px; color: #c9e5f1; font-size: .56rem; font-weight: 550; }
 body[data-map-mode="recent-moisture"] .rank-legend,
-body[data-map-mode="best-now"] .rank-legend { opacity: .45; }
+body[data-map-mode="current-potential"] .rank-legend { opacity: .45; }
 
 .rain-card {
   margin: 16px 0;

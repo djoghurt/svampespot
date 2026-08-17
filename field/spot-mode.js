@@ -3,10 +3,10 @@ import {
 } from './weather.js';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, mapModePresentation,
-} from './map-modes.js?v=2026-08-17-15';
+} from './map-modes.js?v=2026-08-17-16';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-15';
+} from './rank-display.js?v=2026-08-17-16';
 
 const element = (id) => document.getElementById(id);
 
@@ -25,7 +25,9 @@ export function createSpotMode({
     notice: element('mapModeNotice'), noticeTitle: element('mapModeNoticeTitle'),
     noticeBody: element('mapModeNoticeBody'), rainCard: document.querySelector('.rain-card'),
     destinations: document.querySelector('#spotState .destination-actions'),
-    bestNowBadge: element('bestNowMapBadge'), moistureLegend: element('moistureLegend'),
+    currentPotentialBadge: element('currentPotentialMapBadge'),
+    currentPotentialStatus: element('currentPotentialSignalStatus'),
+    moistureLegend: element('moistureLegend'),
   };
   let spotPackage = null;
   let index = 0;
@@ -103,9 +105,10 @@ export function createSpotMode({
     ui.notice.hidden = !presentation.showNotice;
     ui.noticeTitle.textContent = presentation.noticeTitle;
     ui.noticeBody.textContent = presentation.noticeBody;
+    ui.currentPotentialStatus.hidden = mapMode !== MAP_MODES.currentPotential;
     ui.rainCard.hidden = !presentation.showRain;
     ui.destinations.hidden = !presentation.allowNavigation;
-    ui.bestNowBadge.hidden = mapMode !== MAP_MODES.bestNow;
+    ui.currentPotentialBadge.hidden = mapMode !== MAP_MODES.currentPotential;
     ui.moistureLegend.hidden = mapMode !== MAP_MODES.recentMoisture;
     ui.modeButtons.forEach((button) => {
       button.setAttribute('aria-pressed', String(button.dataset.mapMode === mapMode));
