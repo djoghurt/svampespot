@@ -181,7 +181,50 @@
   font-size: .68rem;
   font-weight: 720;
 }
-.trip-species-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.target-species-reference {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: 11px;
+  margin: 2px 0 10px;
+  padding: 7px;
+  border: 1px solid #c9d5d0;
+  border-radius: 13px;
+  background: #f4f7f5;
+}
+.target-species-reference img {
+  width: 64px;
+  height: 64px;
+  border-radius: 9px;
+  object-fit: cover;
+}
+.target-species-reference strong, .target-species-reference span { display: block; }
+.target-species-reference strong { font-size: .84rem; }
+.target-species-reference span { margin-top: 3px; color: #65736e; font-size: .66rem; line-height: 1.35; }
+.trip-species-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 3px; }
+.species-choice-card {
+  display: grid;
+  grid-template-columns: 18px 48px 1fr;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid #cad6d1;
+  border-radius: 11px;
+  background: #f7f9f7;
+  font-size: .7rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.species-choice-card:has(input:checked) { border-color: #4d7a72; background: #e2ece7; }
+.species-choice-card input { margin: 0; }
+.species-choice-card img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; }
+.species-choice-card span { min-width: 0; overflow-wrap: anywhere; }
+.mushroom-safety-note { margin: 9px 2px 0; color: #5f6e69; font-size: .64rem; line-height: 1.4; }
+.mushroom-sources { margin: 5px 2px 0; color: #687771; font-size: .61rem; line-height: 1.4; }
+.mushroom-sources summary { cursor: pointer; font-weight: 720; }
+.mushroom-sources p { margin: 5px 0 0; }
+.mushroom-sources a { color: #285d58; }
 .input-unit { position: relative; display: block; }
 .input-unit input { padding-right: 42px; }
 .input-unit i {

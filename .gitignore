@@ -10,3 +10,4 @@
 !field/**
 !scripts/
 !scripts/check-public-tree.js
+.gstack/

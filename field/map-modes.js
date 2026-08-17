@@ -96,4 +96,4 @@ export function moistureOverlayStyle(label) {
     interactive: false,
   };
 }
-import { formatHabitatStanding } from './rank-display.js?v=2026-08-17-29';
+import { formatHabitatStanding } from './rank-display.js?v=2026-08-18-01';

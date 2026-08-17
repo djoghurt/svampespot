@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-180.png">
   <link rel="stylesheet" href="./vendor/leaflet.css">
-  <link rel="stylesheet" href="./styles.css?v=2026-08-17-29">
-  <link rel="stylesheet" href="./spot-styles.css?v=2026-08-17-29">
+  <link rel="stylesheet" href="./styles.css?v=2026-08-18-01">
+  <link rel="stylesheet" href="./spot-styles.css?v=2026-08-18-01">
 </head>
 <body>
   <header class="topbar">
@@ -168,7 +168,11 @@
         <button id="refreshTripLocation" type="button">Update</button>
       </div>
       <fieldset>
-        <legend>Did you find tragt-kantarel?</legend>
+        <legend>Did you find the target species?</legend>
+        <div class="target-species-reference">
+          <img src="./mushrooms/tragtkantarel.jpg" alt="Tragt-kantarel" width="72" height="72">
+          <div><strong>Tragt-kantarel</strong><span>Det er ikke den almindelige gule kantarel.</span></div>
+        </div>
         <div class="choice-row">
           <label><input type="radio" name="tripDetected" value="yes" required><span>Yes</span></label>
           <label><input type="radio" name="tripDetected" value="no"><span>No</span></label>
@@ -181,11 +185,13 @@
       <fieldset>
         <legend>Other mushrooms seen</legend>
         <div class="trip-species-grid">
-          <label class="check"><input type="checkbox" name="tripSpecies" value="Cantharellus cibarius">Kantarel</label>
-          <label class="check"><input type="checkbox" name="tripSpecies" value="Boletus edulis">Karl Johan</label>
-          <label class="check"><input type="checkbox" name="tripSpecies" value="Imleria badia">Brun rørhat</label>
-          <label class="check"><input type="checkbox" name="tripSpecies" value="Hydnum spp.">Pigsvamp</label>
+          <label class="species-choice-card"><input type="checkbox" name="tripSpecies" value="Cantharellus cibarius"><img src="./mushrooms/kantarel.jpg" alt="" loading="lazy"><span>Kantarel</span></label>
+          <label class="species-choice-card"><input type="checkbox" name="tripSpecies" value="Boletus edulis"><img src="./mushrooms/karl-johan.jpg" alt="" loading="lazy"><span>Karl Johan</span></label>
+          <label class="species-choice-card"><input type="checkbox" name="tripSpecies" value="Imleria badia"><img src="./mushrooms/brun-roerhat.jpg" alt="" loading="lazy"><span>Brun rørhat</span></label>
+          <label class="species-choice-card"><input type="checkbox" name="tripSpecies" value="Hydnum spp."><img src="./mushrooms/pigsvamp.jpg" alt="" loading="lazy"><span>Pigsvamp</span></label>
         </div>
+        <p class="mushroom-safety-note">Billederne er kun en navnehjælp. Brug en svampebog eller artsapp til sikker bestemmelse, før du spiser noget.</p>
+        <details class="mushroom-sources"><summary>Billedkilder</summary><p>Offentligt tilgængelige billeder: <a href="https://commons.wikimedia.org/wiki/File:Cantharellus_tubaeformis_1.jpg" target="_blank" rel="noreferrer">tragt-kantarel</a>, <a href="https://commons.wikimedia.org/wiki/File:Cantharellus_cibarius_2009_G2.jpg" target="_blank" rel="noreferrer">kantarel</a>, <a href="https://commons.wikimedia.org/wiki/File:Boletus_edulis_2020_G1.jpg" target="_blank" rel="noreferrer">Karl Johan</a>, <a href="https://commons.wikimedia.org/wiki/File:H%C5%99ib_hn%C4%9Bd%C3%BD_1.jpg" target="_blank" rel="noreferrer">brun rørhat</a> og <a href="https://commons.wikimedia.org/wiki/File:Hedgehog_fungi.jpg" target="_blank" rel="noreferrer">pigsvamp</a>.</p></details>
       </fieldset>
       <label>Other mushroom names <input name="tripOtherSpecies" type="text" placeholder="Optional"></label>
       <div class="field-grid">
@@ -267,6 +273,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="./vendor/leaflet.js"></script>
-  <script type="module" src="./app.js?v=2026-08-17-29"></script>
+  <script type="module" src="./app.js?v=2026-08-18-01"></script>
 </body>
 </html>
