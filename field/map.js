@@ -1,7 +1,7 @@
 import {
   MAP_MODES, currentPotentialStyle, moistureOverlayStyle,
-} from './map-modes.js?v=2026-08-17-26';
-import { rankTierStyle } from './rank-display.js?v=2026-08-17-26';
+} from './map-modes.js?v=2026-08-17-27';
+import { formatHabitatStanding, rankTierStyle } from './rank-display.js?v=2026-08-17-27';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })
@@ -65,13 +65,13 @@ export function createFieldMap(element) {
   }
 
   function tooltipText(properties) {
-    const percentile = Number.isInteger(properties.top_percent)
-      ? ` · Top ${properties.top_percent}%`
+    const habitat = Number.isInteger(properties.top_percent)
+      ? ` · ${formatHabitatStanding(properties.top_percent)}`
       : '';
     const potential = currentPotentialById.get(properties.spot_id);
     return displayMode === MAP_MODES.currentPotential && potential
       ? potential.map_label
-      : `#${properties.rank}${percentile}`;
+      : `#${properties.rank}${habitat}`;
   }
 
   function restyleSpots() {

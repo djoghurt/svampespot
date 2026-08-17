@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-180.png">
   <link rel="stylesheet" href="./vendor/leaflet.css">
-  <link rel="stylesheet" href="./styles.css?v=2026-08-17-26">
-  <link rel="stylesheet" href="./spot-styles.css?v=2026-08-17-26">
+  <link rel="stylesheet" href="./styles.css?v=2026-08-17-27">
+  <link rel="stylesheet" href="./spot-styles.css?v=2026-08-17-27">
 </head>
 <body>
   <header class="topbar">
@@ -26,12 +26,12 @@
     <section class="map-stage" aria-label="Field map">
       <div id="map"></div>
       <aside id="rankLegend" class="rank-legend" aria-label="Relative habitat rank legend" hidden>
-        <strong>Relative habitat rank</strong>
-        <span><i class="rank-swatch highest"></i>Top 5%</span>
-        <span><i class="rank-swatch high"></i>6–20%</span>
-        <span><i class="rank-swatch medium"></i>21–40%</span>
-        <span><i class="rank-swatch low"></i>41–70%</span>
-        <span><i class="rank-swatch lowest"></i>71–100%</span>
+        <strong>Habitat · higher is better</strong>
+        <span><i class="rank-swatch highest"></i>96–100</span>
+        <span><i class="rank-swatch high"></i>81–95</span>
+        <span><i class="rank-swatch medium"></i>61–80</span>
+        <span><i class="rank-swatch low"></i>30–60</span>
+        <span><i class="rank-swatch lowest"></i>0–29</span>
         <span class="public-boundary-key"><i></i>Naturstyrelsen land</span>
       </aside>
       <aside id="currentPotentialLegend" class="rank-legend potential-legend" aria-label="Current potential legend">
@@ -79,7 +79,7 @@
           <div>
             <p id="spotProgress" class="eyebrow"></p>
             <h1 id="spotTitle">Silkeborg forest area</h1>
-            <p id="spotEvidence" class="rank-evidence">Relative habitat rank within this region · not a probability</p>
+            <p id="spotEvidence" class="rank-evidence">Relative habitat within this region · higher is better · not a probability</p>
             <p id="regionEvidence" class="region-evidence">Development-only regional evidence</p>
           </div>
           <span id="spotRank" class="status-chip">Habitat #1</span>
@@ -204,6 +204,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="./vendor/leaflet.js"></script>
-  <script type="module" src="./app.js?v=2026-08-17-26"></script>
+  <script type="module" src="./app.js?v=2026-08-17-27"></script>
 </body>
 </html>

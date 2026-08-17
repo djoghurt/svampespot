@@ -63,12 +63,12 @@ export function currentPotentialForSpot(spot, weather) {
 export function currentPotentialPresentation(spot, weather) {
   const potential = currentPotentialForSpot(spot, weather);
   if (!potential) return null;
-  const betterThan = Math.round(100 - Number(spot.top_percent));
+  const habitat = formatHabitatStanding(spot.top_percent);
   return {
     ...potential,
     status: potential.label,
-    detail: `Habitat better than ${betterThan}% · ${weather.label}`,
-    map_label: `${potential.label} · Habitat better than ${betterThan}%`,
+    detail: `${habitat} · ${weather.label}`,
+    map_label: `${potential.label} · ${habitat}`,
   };
 }
 
@@ -96,3 +96,4 @@ export function moistureOverlayStyle(label) {
     interactive: false,
   };
 }
+import { formatHabitatStanding } from './rank-display.js?v=2026-08-17-27';

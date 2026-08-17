@@ -3,10 +3,10 @@ import {
 } from './weather.js';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, currentPotentialPresentation, mapModePresentation,
-} from './map-modes.js?v=2026-08-17-26';
+} from './map-modes.js?v=2026-08-17-27';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-26';
+} from './rank-display.js?v=2026-08-17-27';
 
 const element = (id) => document.getElementById(id);
 
@@ -83,7 +83,7 @@ export function createSpotMode({
       ? '12-region overview · zoom in to reveal every ranked area nearby'
       : overviewSpots?.length
         ? 'All areas in selected region · ranks within region'
-        : 'Relative habitat rank within this region · not a probability';
+        : 'Relative habitat within this region · higher is better · not a probability';
   }
 
   function showHabitatSummary() {
