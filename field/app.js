@@ -7,6 +7,7 @@ import {
   formatTimer,
   validateImportedPackage,
 } from './core.js';
+import { loadDefaultSpotPackage } from './default-spots.js';
 import { createFieldMap } from './map.js';
 import { createSpotMode } from './spot-mode.js';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
@@ -267,6 +268,14 @@ async function exportResults() {
 }
 async function initialize() {
   state.package = await loadState('package') || null;
+  if (!state.package) {
+    try {
+      state.package = await loadDefaultSpotPackage();
+      await saveState('package', state.package);
+    } catch {
+      // Keep the import screen as a fallback when the public package is unavailable.
+    }
+  }
   state.results = await loadState('results') || [];
   state.exclusions = await loadState('exclusions') || [];
   state.active = await loadState('active') || null;

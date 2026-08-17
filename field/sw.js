@@ -1,15 +1,17 @@
-const CACHE = 'svampespot-field-v4';
+const CACHE = 'svampespot-field-v5';
 const SHELL = [
   './',
   './index.html',
   './app.js',
   './core.js',
+  './default-spots.js',
   './map.js',
   './spot-mode.js',
   './storage.js',
   './styles.css',
   './spot-styles.css',
   './weather.js',
+  './spots/silkeborg.json',
   './manifest.webmanifest',
   './icon.svg',
   './icon-180.png',

@@ -2,6 +2,7 @@
 
 Experimental, zero-backend field companion for a private mushroom-location pilot.
 
-This public repository contains only the generic installable web shell. It does
-not contain the prediction model, training data, scores, assignments, observer
-data, or real field packages. Locations are imported locally on the user's phone.
+This public repository contains the installable web app and a coordinates-only
+set of ranked Silkeborg areas. It does not contain the prediction model,
+training data, raw scores, assignments, or observer data. The app loads the
+published areas automatically and stores them locally for offline use.
