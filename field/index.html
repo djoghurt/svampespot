@@ -11,12 +11,13 @@
   <link rel="apple-touch-icon" href="./icon-180.png">
   <link rel="stylesheet" href="./vendor/leaflet.css">
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./spot-styles.css">
 </head>
 <body>
   <header class="topbar">
     <div>
       <span class="wordmark">Svampespot</span>
-      <span class="mode">Field pilot</span>
+      <span id="modeLabel" class="mode">Habitat scout</span>
     </div>
     <span class="experimental">Experimental</span>
   </header>
@@ -34,10 +35,45 @@
 
     <section class="field-sheet">
       <div id="emptyState" class="empty-state">
-        <p class="eyebrow">Private field package</p>
-        <h1>Load the visits prepared on your Mac.</h1>
-        <p>The public app contains no predicted locations. Import the blinded package sent to this phone.</p>
-        <button id="importButton" class="primary-action" type="button">Import visits</button>
+        <p class="eyebrow">Private spot package</p>
+        <h1>Load your predicted mushroom areas.</h1>
+        <p>The public app keeps locations private. Import the Silkeborg package prepared on your Mac.</p>
+        <button id="importButton" class="primary-action" type="button">Import spots</button>
+      </div>
+
+      <div id="spotState" hidden>
+        <div class="visit-heading">
+          <div>
+            <p id="spotProgress" class="eyebrow"></p>
+            <h1 id="spotTitle">Silkeborg forest area</h1>
+          </div>
+          <span id="spotRank" class="status-chip">Habitat #1</span>
+        </div>
+
+        <section class="rain-card" aria-live="polite">
+          <div class="rain-heading">
+            <div><p class="eyebrow">Local timing signal</p><h2 id="rainLabel">Checking recent rain…</h2></div>
+            <span class="live-chip">Live</span>
+          </div>
+          <div class="rain-stats">
+            <div><strong id="rain7">—</strong><span>rain · 7 days</span></div>
+            <div><strong id="rain30">—</strong><span>rain · 30 days</span></div>
+            <div><strong id="lastRain">—</strong><span>last ≥5 mm day</span></div>
+          </div>
+          <p>This is a coarse 6–11 km rain-history heuristic, not a mushroom guarantee. Exact spot coordinates are not sent to the weather provider.</p>
+        </section>
+
+        <div class="destination-actions">
+          <a id="spotAppleMaps" class="destination-button primary-destination" href="#" target="_blank" rel="noreferrer">Open area in Apple Maps</a>
+          <a id="spotGoogleMaps" class="destination-button" href="#" target="_blank" rel="noreferrer">Google Maps</a>
+        </div>
+        <p class="access-note">The marker is inside the predicted area. Choose legal parking and public access nearby.</p>
+        <div class="spot-nav">
+          <button id="previousSpot" type="button">Previous</button>
+          <button id="nextSpot" type="button">Next</button>
+          <button id="showAllSpots" type="button">Show all on map</button>
+          <button id="changePackage" type="button">Load updated spots</button>
+        </div>
       </div>
 
       <div id="visitState" hidden>

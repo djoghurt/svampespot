@@ -9,15 +9,20 @@ export function createFieldMap(element) {
 
   let visitLayer;
   let approachMarker;
+  let spotLayer;
   let locationMarker;
 
-  function clearVisit() {
+  function clearTargets() {
     if (visitLayer) map.removeLayer(visitLayer);
     if (approachMarker) map.removeLayer(approachMarker);
+    if (spotLayer) map.removeLayer(spotLayer);
+    visitLayer = null;
+    approachMarker = null;
+    spotLayer = null;
   }
 
   function showVisit(visit) {
-    clearVisit();
+    clearTargets();
     visitLayer = L.geoJSON({
       type: 'Feature',
       properties: {},
@@ -45,6 +50,40 @@ export function createFieldMap(element) {
     map.fitBounds(bounds.pad(0.35), { animate: false });
   }
 
+  function showSpots(spots, selectedId, onSelect, fitAll = false) {
+    clearTargets();
+    const features = spots.map((spot) => ({
+      type: 'Feature',
+      properties: { spot_id: spot.spot_id, rank: spot.rank },
+      geometry: spot.geometry,
+    }));
+    spotLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
+      style: ({ properties }) => {
+        const selected = properties.spot_id === selectedId;
+        return {
+          color: selected ? '#f4c86a' : '#246b65',
+          weight: selected ? 4 : 2,
+          opacity: 1,
+          fillColor: selected ? '#e6a23c' : '#4d6a4b',
+          fillOpacity: selected ? 0.42 : 0.22,
+        };
+      },
+      onEachFeature: (feature, layer) => {
+        layer.bindTooltip(`#${feature.properties.rank}`, { permanent: false, direction: 'top' });
+        layer.on('click', () => onSelect(feature.properties.spot_id));
+      },
+    }).addTo(map);
+    const selected = spots.find(({ spot_id: id }) => id === selectedId);
+    if (fitAll) {
+      map.fitBounds(spotLayer.getBounds().pad(0.08), { animate: false });
+    } else if (selected) {
+      const selectedLayer = [...spotLayer.getLayers()].find(
+        (layer) => layer.feature.properties.spot_id === selectedId,
+      );
+      map.fitBounds(selectedLayer.getBounds().pad(1.1), { animate: false, maxZoom: 15 });
+    }
+  }
+
   function showLocation(coords, accuracy) {
     const latLng = [coords[1], coords[0]];
     if (!locationMarker) {
@@ -61,5 +100,5 @@ export function createFieldMap(element) {
     locationMarker.setRadius(Math.max(7, Math.min(18, Number(accuracy) / 8 || 8)));
   }
 
-  return { map, showVisit, showLocation };
+  return { map, showVisit, showSpots, showLocation };
 }

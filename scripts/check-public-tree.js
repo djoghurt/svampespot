@@ -16,6 +16,8 @@ const allowed = new Set([
   "field/index.html",
   "field/manifest.webmanifest",
   "field/map.js",
+  "field/spot-mode.js",
+  "field/spot-styles.css",
   "field/storage.js",
   "field/styles.css",
   "field/sw.js",
@@ -26,6 +28,7 @@ const allowed = new Set([
   "field/vendor/images/marker-shadow.png",
   "field/vendor/leaflet.css",
   "field/vendor/leaflet.js",
+  "field/weather.js",
   "scripts/check-public-tree.js"
 ]);
 const tracked = execFileSync('git', ['ls-files'], { encoding: 'utf8' })

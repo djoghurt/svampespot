@@ -5,9 +5,10 @@ import {
   distanceMeters,
   formatDistance,
   formatTimer,
-  validateFieldPackage,
+  validateImportedPackage,
 } from './core.js';
 import { createFieldMap } from './map.js';
+import { createSpotMode } from './spot-mode.js';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
 
 const element = (id) => document.getElementById(id);
@@ -36,30 +37,35 @@ const state = {
   timerId: null,
 };
 
+const spotMode = createSpotMode({
+  fieldMap,
+  packageInput: ui.input,
+  onSelectionChanged: () => updateInstrument(),
+  showToast,
+});
+
 const currentVisit = () => state.package?.visits[state.index] || null;
 const completedIds = () => new Set(state.results.map((result) => result.visit_id));
-
 function showToast(message) {
   ui.toast.textContent = message;
   ui.toast.classList.add('visible');
   setTimeout(() => ui.toast.classList.remove('visible'), 2600);
 }
-
 function updateInstrument() {
   const visit = currentVisit();
-  if (!visit || !state.position) {
+  const target = spotMode.currentCenter() || visit?.approach_point;
+  if (!target || !state.position) {
     ui.bearing.textContent = '—';
     ui.distance.textContent = 'Location off';
     ui.needle.style.transform = 'rotate(0deg)';
     return;
   }
-  const distance = distanceMeters(state.position, visit.approach_point);
-  const bearing = bearingDegrees(state.position, visit.approach_point);
+  const distance = distanceMeters(state.position, target);
+  const bearing = bearingDegrees(state.position, target);
   ui.bearing.textContent = String(Math.round(bearing)).padStart(3, '0') + '°';
   ui.distance.textContent = formatDistance(distance);
   ui.needle.style.transform = 'rotate(' + bearing + 'deg)';
 }
-
 function updatePosition(position) {
   state.position = [position.coords.longitude, position.coords.latitude];
   fieldMap.showLocation(state.position, position.coords.accuracy);
@@ -70,7 +76,6 @@ function updatePosition(position) {
   }
   updateInstrument();
 }
-
 function requestLocation(watch = false) {
   if (!navigator.geolocation) return showToast('Location is not available on this device.');
   navigator.geolocation.getCurrentPosition(updatePosition, () => {
@@ -82,14 +87,12 @@ function requestLocation(watch = false) {
     });
   }
 }
-
 function navigationLinks(visit) {
   const destination = visit.approach_point[1] + ',' + visit.approach_point[0];
   ui.apple.href = 'https://maps.apple.com/?daddr=' + destination + '&dirflg=d';
   ui.google.href = 'https://www.google.com/maps/dir/?api=1&destination=' + destination
     + '&travelmode=driving';
 }
-
 function tick() {
   if (!state.active) {
     ui.timer.textContent = formatTimer((state.package?.minutes_per_visit || 30) * 60);
@@ -103,12 +106,18 @@ function tick() {
     ui.finish.classList.add('attention');
   }
 }
-
 function render() {
   const hasPackage = Boolean(state.package);
   ui.empty.hidden = hasPackage;
-  ui.visit.hidden = !hasPackage;
+  const hasSpots = state.package?.package_type === 'ranked_spots';
+  ui.visit.hidden = !hasPackage || hasSpots;
   if (!hasPackage) return;
+  if (hasSpots) {
+    spotMode.activate(state.package);
+    updateInstrument();
+    return;
+  }
+  spotMode.deactivate();
   const visit = currentVisit();
   const complete = completedIds().has(visit.visit_id);
   const pairStarted = state.results.some(({ pair_id: pairId }) => pairId === visit.pair_id);
@@ -129,20 +138,22 @@ function render() {
   updateInstrument();
   tick();
 }
-
 async function importPackage(file) {
-  const parsed = validateFieldPackage(JSON.parse(await file.text()));
+  const parsed = validateImportedPackage(JSON.parse(await file.text()));
   state.package = parsed;
   state.results = [];
   state.exclusions = [];
+  state.active = null;
   state.index = 0;
   await saveState('package', parsed);
   await saveState('results', []);
   await saveState('exclusions', []);
+  await saveState('active', null);
   render();
-  showToast(parsed.visits.length + ' blinded visits imported.');
+  showToast(parsed.package_type === 'ranked_spots'
+    ? parsed.spots.length + ' habitat spots imported.'
+    : parsed.visits.length + ' blinded visits imported.');
 }
-
 async function startVisit() {
   const visit = currentVisit();
   state.active = {
@@ -157,19 +168,16 @@ async function startVisit() {
   state.timerId = setInterval(tick, 1000);
   render();
 }
-
 function stopTracking() {
   if (state.watchId != null) navigator.geolocation.clearWatch(state.watchId);
   state.watchId = null;
   clearInterval(state.timerId);
   state.timerId = null;
 }
-
 function openResult() {
   ui.form.reset();
   ui.dialog.showModal();
 }
-
 async function saveResult(event) {
   event.preventDefault();
   const visit = currentVisit();
@@ -206,7 +214,6 @@ async function saveResult(event) {
   render();
   showToast('Result saved on this phone.');
 }
-
 async function replacePair(event) {
   event.preventDefault();
   const data = new FormData(ui.replaceForm);
@@ -225,7 +232,6 @@ async function replacePair(event) {
   render();
   showToast('Replacement pair activated and reason recorded.');
 }
-
 function downloadFile(file) {
   const link = document.createElement('a');
   link.href = URL.createObjectURL(file);
@@ -233,7 +239,6 @@ function downloadFile(file) {
   link.click();
   setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
-
 async function exportResults() {
   const body = {
     schema_version: 1,
@@ -260,13 +265,12 @@ async function exportResults() {
     files.forEach(downloadFile);
   }
 }
-
 async function initialize() {
   state.package = await loadState('package') || null;
   state.results = await loadState('results') || [];
   state.exclusions = await loadState('exclusions') || [];
   state.active = await loadState('active') || null;
-  if (state.active) {
+  if (state.active && state.package?.package_type !== 'ranked_spots') {
     state.index = Math.max(0, state.package?.visits.findIndex(
       ({ visit_id: visitId }) => visitId === state.active.visit_id,
     ) || 0);

@@ -32,6 +32,36 @@ export function validateFieldPackage(value) {
   return value;
 }
 
+export function validateSpotPackage(value) {
+  if (value?.schema_version !== 1 || value.package_type !== 'ranked_spots'
+    || !Array.isArray(value.spots) || !value.experimental) {
+    throw new Error('This is not a Svampespot ranked-spots package');
+  }
+  const seen = new Set();
+  for (const spot of value.spots) {
+    if ('score' in spot || 'arm' in spot || 'model' in spot) {
+      throw new Error('Spot package contains private model data');
+    }
+    if (!spot.spot_id || seen.has(spot.spot_id) || !spot.cell_id || !spot.region) {
+      throw new Error('Ranked spots require unique IDs, cells, and regions');
+    }
+    seen.add(spot.spot_id);
+    if (!Number.isInteger(spot.rank) || spot.rank < 1 || !finiteCoordinate(spot.center)) {
+      throw new Error('Ranked spot requires a rank and area marker');
+    }
+    if (!spot.geometry || !['Polygon', 'MultiPolygon'].includes(spot.geometry.type)) {
+      throw new Error('Ranked spot requires a target polygon');
+    }
+  }
+  return value;
+}
+
+export function validateImportedPackage(value) {
+  return value?.package_type === 'ranked_spots'
+    ? validateSpotPackage(value)
+    : validateFieldPackage(value);
+}
+
 export function activateReplacementPair(value, visitId, reason, recordedAt) {
   const fieldPackage = validateFieldPackage(value);
   const visit = fieldPackage.visits.find(({ visit_id: id }) => id === visitId);
