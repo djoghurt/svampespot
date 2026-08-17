@@ -63,11 +63,12 @@ export function currentPotentialForSpot(spot, weather) {
 export function currentPotentialPresentation(spot, weather) {
   const potential = currentPotentialForSpot(spot, weather);
   if (!potential) return null;
+  const betterThan = Math.round(100 - Number(spot.top_percent));
   return {
     ...potential,
     status: potential.label,
-    detail: `Top ${spot.top_percent}% habitat · ${weather.label}`,
-    map_label: `${potential.label} · Habitat top ${spot.top_percent}%`,
+    detail: `Habitat better than ${betterThan}% · ${weather.label}`,
+    map_label: `${potential.label} · Habitat better than ${betterThan}%`,
   };
 }
 
