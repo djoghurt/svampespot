@@ -1,13 +1,13 @@
-const CACHE = 'svampespot-field-v8';
+const CACHE = 'svampespot-field-v9';
 const SHELL = [
   './',
   './index.html',
-  './app.js',
+  './app.js?v=2026-08-17-4',
   './core.js',
-  './default-spots.js',
+  './default-spots.js?v=2026-08-17-4',
   './map.js',
   './rank-display.js',
-  './spot-mode.js',
+  './spot-mode.js?v=2026-08-17-4',
   './storage.js',
   './styles.css',
   './spot-styles.css',
@@ -45,13 +45,16 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-  if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request).then(async (response) => {
+  const needsFreshData = url.pathname.includes('/spots/')
+    || url.pathname.includes('/public-land/');
+  if (event.request.mode === 'navigate' || needsFreshData) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }).then(async (response) => {
       const cache = await caches.open(CACHE);
       await cache.put(event.request, response.clone());
       return response;
     }).catch(async () => (
-      await caches.match(event.request) || await caches.match('./index.html')
+      await caches.match(event.request)
+      || (event.request.mode === 'navigate' ? await caches.match('./index.html') : null)
     )));
     return;
   }

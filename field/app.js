@@ -13,9 +13,9 @@ import {
   loadRegionPublicLand,
   loadRegionSpotOverview,
   loadRegionSpotPackage,
-} from './default-spots.js';
+} from './default-spots.js?v=2026-08-17-4';
 import { createFieldMap } from './map.js';
-import { createSpotMode } from './spot-mode.js';
+import { createSpotMode } from './spot-mode.js?v=2026-08-17-4';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
 
 const element = (id) => document.getElementById(id);
@@ -365,7 +365,11 @@ async function initialize() {
       showToast('Some regions could not be loaded. The selected region still works.');
     });
   }
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js?v=2026-08-17-4', {
+      updateViaCache: 'none',
+    }).then((registration) => registration.update()).catch(() => {});
+  }
 }
 
 ui.importButton.addEventListener('click', () => ui.input.click());
