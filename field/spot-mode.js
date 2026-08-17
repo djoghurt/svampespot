@@ -1,14 +1,28 @@
 import {
-  fetchRainGrid, nearestWeatherSample, weatherGridPoints,
+  fetchRainGrid, fetchRainHistory, nearestWeatherSample, weatherGridPoints,
 } from './weather.js';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, currentPotentialForSpot, mapModePresentation,
-} from './map-modes.js?v=2026-08-17-17';
+} from './map-modes.js?v=2026-08-17-18';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-17';
+} from './rank-display.js?v=2026-08-17-18';
 
 const element = (id) => document.getElementById(id);
+
+export async function firstRainResult(selectedRequest, gridRequest, center) {
+  return Promise.any([
+    selectedRequest.then((summary) => {
+      if (!summary) throw new Error('Selected weather is unavailable');
+      return { summary, samples: null };
+    }),
+    gridRequest.then((samples) => {
+      const summary = nearestWeatherSample(samples, center);
+      if (!summary) throw new Error('Regional weather is unavailable');
+      return { summary, samples };
+    }),
+  ]);
+}
 
 export function createSpotMode({
   detailZoom, fieldMap, packageInput, onSelectionChanged, onRegionChanged, showToast,
@@ -96,6 +110,7 @@ export function createSpotMode({
     ui.currentPotentialBadge.dataset.tier = potential.tier;
     ui.rank.textContent = `${potential.label.replace(' now', '')} · ${potential.score}/100`;
     ui.evidence.textContent = `Experimental field estimate · habitat top ${spot.top_percent}% × ${summary.label.toLowerCase()}`;
+    return potential;
   }
 
   async function updateWeather(spot) {
@@ -107,28 +122,51 @@ export function createSpotMode({
     ui.rain30.textContent = '—';
     ui.lastRain.textContent = '—';
     try {
-      let samples = weather.get(cacheKey);
-      if (!samples) {
-        samples = fetchRainGrid(weatherGridPoints(weatherSpots));
-        weather.set(cacheKey, samples);
+      let gridRequest = weather.get(cacheKey);
+      const cachedSamples = Array.isArray(gridRequest) ? gridRequest : null;
+      if (!gridRequest) {
+        gridRequest = fetchRainGrid(weatherGridPoints(weatherSpots));
+        weather.set(cacheKey, gridRequest);
       }
-      samples = await samples;
-      weather.set(cacheKey, samples);
-      if (request === weatherRequest
+      const selectedRequest = cachedSamples
+        ? Promise.resolve(nearestWeatherSample(cachedSamples, spot.center))
+        : fetchRainHistory(spot.center);
+      const first = await firstRainResult(selectedRequest, gridRequest, spot.center);
+      const isCurrent = () => request === weatherRequest
         && [MAP_MODES.currentPotential, MAP_MODES.recentMoisture].includes(mapMode)
-        && currentSpot()?.spot_id === spot.spot_id) {
-        const summary = nearestWeatherSample(samples, spot.center);
-        if (!summary) throw new Error('No regional weather samples');
-        showWeather(summary);
-        if (mapMode === MAP_MODES.currentPotential) {
-          const scoredSpots = weatherSpots.some(({ spot_id: spotId }) => spotId === spot.spot_id)
-            ? weatherSpots : [...weatherSpots, spot];
-          fieldMap.showCurrentPotential(potentialValues(scoredSpots, samples));
-          showCurrentPotential(spot, summary);
-        } else {
-          fieldMap.showWeatherGrid(samples);
-          ui.moistureLegend.innerHTML = `<strong>${summary.label}</strong><span>${samples.length} DMI model samples · roughly 2 km</span>`;
+        && currentSpot()?.spot_id === spot.spot_id;
+      if (!isCurrent()) return;
+      showWeather(first.summary);
+      if (mapMode === MAP_MODES.currentPotential) {
+        const potential = showCurrentPotential(spot, first.summary);
+        fieldMap.showCurrentPotential([{ spot_id: spot.spot_id, potential }]);
+      } else if (!first.samples) {
+        ui.moistureLegend.innerHTML = '<strong>Local rain ready</strong><span>Loading regional rain map…</span>';
+      }
+      let samples;
+      try {
+        samples = first.samples || await gridRequest;
+      } catch {
+        weather.delete(cacheKey);
+        if (isCurrent()) {
+          ui.moistureLegend.innerHTML = '<strong>Regional rain unavailable</strong><span>Selected area still works</span>';
+          showToast('Selected-area rain loaded, but the regional rain map did not.');
         }
+        return;
+      }
+      weather.set(cacheKey, samples);
+      if (!isCurrent()) return;
+      const summary = nearestWeatherSample(samples, spot.center);
+      if (!summary) throw new Error('No regional weather samples');
+      showWeather(summary);
+      if (mapMode === MAP_MODES.currentPotential) {
+        const scoredSpots = weatherSpots.some(({ spot_id: spotId }) => spotId === spot.spot_id)
+          ? weatherSpots : [...weatherSpots, spot];
+        fieldMap.showCurrentPotential(potentialValues(scoredSpots, samples));
+        showCurrentPotential(spot, summary);
+      } else {
+        fieldMap.showWeatherGrid(samples);
+        ui.moistureLegend.innerHTML = `<strong>${summary.label}</strong><span>${samples.length} DMI model samples · roughly 2 km</span>`;
       }
     } catch {
       weather.delete(cacheKey);
