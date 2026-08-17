@@ -232,6 +232,25 @@ textarea { resize: vertical; }
 }
 .toast.visible { transform: translate(-50%, 0); }
 
+@media (max-width: 759px) {
+  .map-stage { height: 68dvh; min-height: 460px; }
+  .aperture { width: 86px; height: 86px; }
+  .aperture { left: 12px; top: 12px; }
+  .bearing { font-size: 1.05rem; }
+  .distance { font-size: .62rem; }
+  .needle { top: 4px; transform-origin: 50% 38px; }
+  .map-action {
+    right: 10px;
+    bottom: 10px;
+    min-height: 42px;
+    padding: 0 12px;
+    border-radius: 11px;
+    font-size: .8rem;
+  }
+  .field-sheet { padding: 20px 14px calc(24px + env(safe-area-inset-bottom)); }
+  h1 { font-size: clamp(1.42rem, 7vw, 1.9rem); }
+}
+
 @media (min-width: 760px) {
   main { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(360px, .75fr); height: calc(100dvh - 58px); }
   .map-stage { height: 100%; min-height: 0; }
