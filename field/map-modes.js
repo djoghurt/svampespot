@@ -60,6 +60,17 @@ export function currentPotentialForSpot(spot, weather) {
   return { score, tier, label };
 }
 
+export function currentPotentialPresentation(spot, weather) {
+  const potential = currentPotentialForSpot(spot, weather);
+  if (!potential) return null;
+  return {
+    ...potential,
+    status: potential.label,
+    detail: `Top ${spot.top_percent}% habitat · ${weather.label}`,
+    map_label: `${potential.label} · Habitat top ${spot.top_percent}%`,
+  };
+}
+
 export function currentPotentialStyle(tier) {
   return {
     fillColor: CURRENT_POTENTIAL_COLOURS[tier] || '#687a76',

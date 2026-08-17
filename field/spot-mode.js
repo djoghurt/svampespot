@@ -2,11 +2,11 @@ import {
   fetchRainGrid, fetchRainHistory, nearestWeatherSample, weatherGridPoints,
 } from './weather.js';
 import {
-  DEFAULT_MAP_MODE, MAP_MODES, currentPotentialForSpot, mapModePresentation,
-} from './map-modes.js?v=2026-08-17-18';
+  DEFAULT_MAP_MODE, MAP_MODES, currentPotentialPresentation, mapModePresentation,
+} from './map-modes.js?v=2026-08-17-19';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-18';
+} from './rank-display.js?v=2026-08-17-19';
 
 const element = (id) => document.getElementById(id);
 
@@ -94,22 +94,22 @@ export function createSpotMode({
   }
 
   function potentialValues(spots, samples) {
-    return (spots || []).map((spot) => ({
-      spot_id: spot.spot_id,
-      potential: currentPotentialForSpot(
-        spot,
-        nearestWeatherSample(samples, spot.center),
-      ),
-    })).filter(({ potential }) => potential);
+    return (spots || []).map((spot) => {
+      const summary = nearestWeatherSample(samples, spot.center);
+      return {
+        spot_id: spot.spot_id,
+        potential: currentPotentialPresentation(spot, summary),
+      };
+    }).filter(({ potential }) => potential);
   }
 
   function showCurrentPotential(spot, summary) {
-    const potential = currentPotentialForSpot(spot, summary);
+    const potential = currentPotentialPresentation(spot, summary);
     if (!potential) throw new Error('Current potential is unavailable');
-    ui.currentPotentialBadge.textContent = `${potential.label} · ${potential.score}/100`;
+    ui.currentPotentialBadge.textContent = potential.status;
     ui.currentPotentialBadge.dataset.tier = potential.tier;
-    ui.rank.textContent = `${potential.label.replace(' now', '')} · ${potential.score}/100`;
-    ui.evidence.textContent = `Experimental field estimate · habitat top ${spot.top_percent}% × ${summary.label.toLowerCase()}`;
+    ui.rank.textContent = potential.status;
+    ui.evidence.textContent = potential.detail;
     return potential;
   }
 

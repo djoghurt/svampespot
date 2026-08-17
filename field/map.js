@@ -1,7 +1,7 @@
 import {
   MAP_MODES, currentPotentialStyle, moistureOverlayStyle,
-} from './map-modes.js?v=2026-08-17-18';
-import { rankTierStyle } from './rank-display.js?v=2026-08-17-18';
+} from './map-modes.js?v=2026-08-17-19';
+import { rankTierStyle } from './rank-display.js?v=2026-08-17-19';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })
@@ -70,7 +70,7 @@ export function createFieldMap(element) {
       : '';
     const potential = currentPotentialById.get(properties.spot_id);
     return displayMode === MAP_MODES.currentPotential && potential
-      ? `${potential.label} · ${potential.score}/100`
+      ? potential.map_label
       : `#${properties.rank}${percentile}`;
   }
 
