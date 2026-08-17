@@ -24,6 +24,7 @@ export function createSpotMode({
   let publicLand = null;
   let regionInfo = null;
   let regions = [];
+  let overviewSpots = null;
   const weather = new Map();
 
   const currentSpot = () => spotPackage?.spots[index] || null;
@@ -67,7 +68,13 @@ export function createSpotMode({
 
   function selectSpot(spotId) {
     const nextIndex = spotPackage.spots.findIndex(({ spot_id: id }) => id === spotId);
-    if (nextIndex < 0) return;
+    if (nextIndex < 0) {
+      const overviewSpot = overviewSpots?.find(({ spot_id: id }) => id === spotId);
+      if (overviewSpot?.region && overviewSpot.region !== spotPackage.region) {
+        onRegionChanged(overviewSpot.region, spotId);
+      }
+      return;
+    }
     index = nextIndex;
     fitAll = false;
     render();
@@ -84,11 +91,14 @@ export function createSpotMode({
     ui.evidence.textContent = 'Relative habitat rank within this region · not a probability';
     ui.regionEvidence.textContent = formatRegionEvidence(regionInfo?.evidence);
     ui.region.value = spotPackage.region;
-    ui.all.textContent = `Show all ${total} areas`;
+    const mapSpots = overviewSpots?.length ? overviewSpots : spotPackage.spots;
+    ui.all.textContent = overviewSpots?.length
+      ? `Show all regions · ${overviewSpots.length} areas`
+      : `Show all ${total} areas`;
     ui.previous.disabled = index === 0;
     ui.next.disabled = index === spotPackage.spots.length - 1;
     navigationLinks(spot);
-    fieldMap.showSpots(spotPackage.spots, spot.spot_id, selectSpot, fitAll, publicLand);
+    fieldMap.showSpots(mapSpots, spot.spot_id, selectSpot, fitAll, publicLand);
     fitAll = false;
     updateWeather(spot);
   }
@@ -97,10 +107,11 @@ export function createSpotMode({
     active = true;
     publicLand = context.publicLand || null;
     regionInfo = context.regionInfo || null;
+    overviewSpots = context.overviewSpots || null;
     if (spotPackage !== value) {
       spotPackage = value;
       index = 0;
-      fitAll = true;
+      fitAll = !overviewSpots;
       weather.clear();
     }
     ui.state.hidden = false;
@@ -140,6 +151,7 @@ export function createSpotMode({
   ui.region.addEventListener('change', () => onRegionChanged(ui.region.value));
 
   return {
-    activate, deactivate, currentCenter, restoreRegionSelection, setRegionLoading, setRegions,
+    activate, deactivate, currentCenter, restoreRegionSelection, selectSpot,
+    setRegionLoading, setRegions,
   };
 }

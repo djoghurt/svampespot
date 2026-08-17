@@ -9,6 +9,14 @@ export async function loadRegionSpotPackage(region, fetchPackage = fetch) {
   return validateImportedPackage(await response.json());
 }
 
+export async function loadRegionSpotOverview(regions, fetchPackage = fetch) {
+  if (!Array.isArray(regions)) throw new Error('Habitat region list is invalid');
+  const packages = await Promise.all(regions.map(({ key }) => (
+    loadRegionSpotPackage(key, fetchPackage)
+  )));
+  return packages.flatMap(({ spots }) => spots);
+}
+
 export async function loadRegionManifest(fetchPackage = fetch) {
   const response = await fetchPackage(REGION_MANIFEST_URL);
   if (!response.ok) throw new Error('Habitat region list is not available');

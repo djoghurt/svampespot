@@ -1,4 +1,4 @@
-const CACHE = 'svampespot-field-v7';
+const CACHE = 'svampespot-field-v8';
 const SHELL = [
   './',
   './index.html',

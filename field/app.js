@@ -11,6 +11,7 @@ import {
   chooseInitialPackage,
   loadRegionManifest,
   loadRegionPublicLand,
+  loadRegionSpotOverview,
   loadRegionSpotPackage,
 } from './default-spots.js';
 import { createFieldMap } from './map.js';
@@ -43,6 +44,7 @@ const state = {
   timerId: null,
   regionManifest: null,
   publicLand: null,
+  overviewSpots: null,
 };
 
 const spotMode = createSpotMode({
@@ -126,7 +128,11 @@ function render() {
       ({ key }) => key === state.package.region,
     ) || null;
     spotMode.setRegions(state.regionManifest?.regions || []);
-    spotMode.activate(state.package, { publicLand: state.publicLand, regionInfo });
+    spotMode.activate(state.package, {
+      overviewSpots: state.overviewSpots,
+      publicLand: state.publicLand,
+      regionInfo,
+    });
     updateInstrument();
     return;
   }
@@ -176,7 +182,7 @@ async function importPackage(file) {
     : parsed.visits.length + ' blinded visits imported.');
 }
 
-async function switchRegion(region) {
+async function switchRegion(region, spotId = null) {
   const regionInfo = state.regionManifest?.regions.find(({ key }) => key === region);
   if (!regionInfo || region === state.package?.region) return;
   spotMode.setRegionLoading(true);
@@ -189,6 +195,7 @@ async function switchRegion(region) {
     state.publicLand = publicLand;
     await saveState('package', publishedPackage);
     render();
+    if (spotId) spotMode.selectSpot(spotId);
     showToast(`${regionInfo.name} loaded · ${regionInfo.eligible_cells} ranked areas.`);
   } catch (error) {
     showToast(error.message);
@@ -196,6 +203,16 @@ async function switchRegion(region) {
   } finally {
     spotMode.setRegionLoading(false);
   }
+}
+
+async function loadDenmarkOverview() {
+  if (!state.regionManifest?.regions.length) return;
+  state.overviewSpots = await loadRegionSpotOverview(state.regionManifest.regions);
+  render();
+  showToast(
+    `${state.regionManifest.regions.length} regions visible · `
+    + `${state.overviewSpots.length} ranked areas.`,
+  );
 }
 async function startVisit() {
   const visit = currentVisit();
@@ -343,6 +360,11 @@ async function initialize() {
     state.timerId = setInterval(tick, 1000);
   }
   render();
+  if (state.package?.package_type === 'ranked_spots') {
+    loadDenmarkOverview().catch(() => {
+      showToast('Some regions could not be loaded. The selected region still works.');
+    });
+  }
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 }
 
