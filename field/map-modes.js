@@ -9,11 +9,11 @@ export const DEFAULT_MAP_MODE = MAP_MODES.currentPotential;
 const PRESENTATIONS = Object.freeze({
   [MAP_MODES.currentPotential]: Object.freeze({
     modeLabel: 'Current potential',
-    noticeTitle: 'The source maps work. The combined score is not validated yet.',
-    noticeBody: 'Current potential needs a tested rule for combining habitat and recent weather. Until that passes evaluation, use the two source maps separately.',
-    showNotice: true,
-    showRain: false,
-    allowNavigation: false,
+    noticeTitle: '',
+    noticeBody: '',
+    showNotice: false,
+    showRain: true,
+    allowNavigation: true,
   }),
   [MAP_MODES.habitat]: Object.freeze({
     modeLabel: 'Habitat potential',
@@ -37,6 +37,34 @@ export function mapModePresentation(mode) {
   const presentation = PRESENTATIONS[mode];
   if (!presentation) throw new Error(`Unknown map mode: ${mode}`);
   return { ...presentation };
+}
+
+const CURRENT_POTENTIAL_COLOURS = Object.freeze({
+  strong: '#18845f',
+  promising: '#e0a12f',
+  low: '#a85b4e',
+});
+
+const clamp = (value) => Math.max(0, Math.min(1, value));
+
+export function currentPotentialForSpot(spot, weather) {
+  const topPercent = Number(spot?.top_percent);
+  const moisture = Number(weather?.moisture_factor);
+  if (!Number.isFinite(topPercent) || topPercent < 1 || topPercent > 100
+    || !Number.isFinite(moisture)) return null;
+  const habitat = 1 - (clamp((topPercent - 1) / 99) * 0.6);
+  const score = Math.round(100 * habitat * clamp(moisture));
+  const tier = score >= 70 ? 'strong' : score >= 40 ? 'promising' : 'low';
+  const label = tier === 'strong' ? 'Strong now'
+    : tier === 'promising' ? 'Promising now' : 'Low now';
+  return { score, tier, label };
+}
+
+export function currentPotentialStyle(tier) {
+  return {
+    fillColor: CURRENT_POTENTIAL_COLOURS[tier] || '#687a76',
+    fillOpacity: tier ? 0.78 : 0.22,
+  };
 }
 
 const MOISTURE_COLOURS = Object.freeze({

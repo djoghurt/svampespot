@@ -2,11 +2,11 @@ import {
   fetchRainGrid, nearestWeatherSample, weatherGridPoints,
 } from './weather.js';
 import {
-  DEFAULT_MAP_MODE, MAP_MODES, mapModePresentation,
-} from './map-modes.js?v=2026-08-17-16';
+  DEFAULT_MAP_MODE, MAP_MODES, currentPotentialForSpot, mapModePresentation,
+} from './map-modes.js?v=2026-08-17-17';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-16';
+} from './rank-display.js?v=2026-08-17-17';
 
 const element = (id) => document.getElementById(id);
 
@@ -26,7 +26,8 @@ export function createSpotMode({
     noticeBody: element('mapModeNoticeBody'), rainCard: document.querySelector('.rain-card'),
     destinations: document.querySelector('#spotState .destination-actions'),
     currentPotentialBadge: element('currentPotentialMapBadge'),
-    currentPotentialStatus: element('currentPotentialSignalStatus'),
+    currentPotentialLegend: element('currentPotentialLegend'),
+    rankLegend: element('rankLegend'),
     moistureLegend: element('moistureLegend'),
   };
   let spotPackage = null;
@@ -63,9 +64,44 @@ export function createSpotMode({
       : summary.days_since_5mm_rain + ' days ago';
   }
 
+  function habitatEvidence() {
+    return overviewSpots?.length && overviewMode
+      ? '12-region overview · zoom in to reveal every ranked area nearby'
+      : overviewSpots?.length
+        ? 'All areas in selected region · ranks within region'
+        : 'Relative habitat rank within this region · not a probability';
+  }
+
+  function showHabitatSummary() {
+    const spot = currentSpot();
+    if (!spot) return;
+    ui.rank.textContent = rankTierLabel(spot.rank_tier);
+    ui.evidence.textContent = habitatEvidence();
+  }
+
+  function potentialValues(spots, samples) {
+    return (spots || []).map((spot) => ({
+      spot_id: spot.spot_id,
+      potential: currentPotentialForSpot(
+        spot,
+        nearestWeatherSample(samples, spot.center),
+      ),
+    })).filter(({ potential }) => potential);
+  }
+
+  function showCurrentPotential(spot, summary) {
+    const potential = currentPotentialForSpot(spot, summary);
+    if (!potential) throw new Error('Current potential is unavailable');
+    ui.currentPotentialBadge.textContent = `${potential.label} · ${potential.score}/100`;
+    ui.currentPotentialBadge.dataset.tier = potential.tier;
+    ui.rank.textContent = `${potential.label.replace(' now', '')} · ${potential.score}/100`;
+    ui.evidence.textContent = `Experimental field estimate · habitat top ${spot.top_percent}% × ${summary.label.toLowerCase()}`;
+  }
+
   async function updateWeather(spot) {
     const request = ++weatherRequest;
-    const cacheKey = `${spotPackage.region}:${spotPackage.generated_at}`;
+    const weatherSpots = overviewMode ? overviewSpots : spotPackage.spots;
+    const cacheKey = `${overviewMode ? 'overview' : spotPackage.region}:${spotPackage.generated_at}`;
     ui.rainLabel.textContent = 'Checking DMI rain history…';
     ui.rain7.textContent = '—';
     ui.rain30.textContent = '—';
@@ -73,18 +109,26 @@ export function createSpotMode({
     try {
       let samples = weather.get(cacheKey);
       if (!samples) {
-        samples = fetchRainGrid(weatherGridPoints(spotPackage.spots));
+        samples = fetchRainGrid(weatherGridPoints(weatherSpots));
         weather.set(cacheKey, samples);
       }
       samples = await samples;
       weather.set(cacheKey, samples);
-      if (request === weatherRequest && mapMode === MAP_MODES.recentMoisture
+      if (request === weatherRequest
+        && [MAP_MODES.currentPotential, MAP_MODES.recentMoisture].includes(mapMode)
         && currentSpot()?.spot_id === spot.spot_id) {
         const summary = nearestWeatherSample(samples, spot.center);
         if (!summary) throw new Error('No regional weather samples');
         showWeather(summary);
-        fieldMap.showWeatherGrid(samples);
-        ui.moistureLegend.innerHTML = `<strong>${summary.label}</strong><span>${samples.length} DMI model samples · roughly 2 km</span>`;
+        if (mapMode === MAP_MODES.currentPotential) {
+          const scoredSpots = weatherSpots.some(({ spot_id: spotId }) => spotId === spot.spot_id)
+            ? weatherSpots : [...weatherSpots, spot];
+          fieldMap.showCurrentPotential(potentialValues(scoredSpots, samples));
+          showCurrentPotential(spot, summary);
+        } else {
+          fieldMap.showWeatherGrid(samples);
+          ui.moistureLegend.innerHTML = `<strong>${summary.label}</strong><span>${samples.length} DMI model samples · roughly 2 km</span>`;
+        }
       }
     } catch {
       weather.delete(cacheKey);
@@ -92,6 +136,13 @@ export function createSpotMode({
         ui.rainLabel.textContent = 'Rain history unavailable';
         ui.moistureLegend.innerHTML = '<strong>Recent rain unavailable</strong><span>Habitat data still works</span>';
         fieldMap.clearWeatherRegion();
+        fieldMap.showCurrentPotential([]);
+        if (mapMode === MAP_MODES.currentPotential) {
+          delete ui.currentPotentialBadge.dataset.tier;
+          ui.currentPotentialBadge.textContent = 'Rain unavailable · showing habitat';
+          showHabitatSummary();
+          ui.evidence.textContent = 'Recent rain unavailable · showing habitat rank';
+        }
         showToast('Could not load local rain history. Habitat spots still work.');
       }
     }
@@ -105,15 +156,24 @@ export function createSpotMode({
     ui.notice.hidden = !presentation.showNotice;
     ui.noticeTitle.textContent = presentation.noticeTitle;
     ui.noticeBody.textContent = presentation.noticeBody;
-    ui.currentPotentialStatus.hidden = mapMode !== MAP_MODES.currentPotential;
     ui.rainCard.hidden = !presentation.showRain;
     ui.destinations.hidden = !presentation.allowNavigation;
     ui.currentPotentialBadge.hidden = mapMode !== MAP_MODES.currentPotential;
+    ui.currentPotentialLegend.hidden = mapMode !== MAP_MODES.currentPotential;
+    ui.rankLegend.hidden = mapMode !== MAP_MODES.habitat;
     ui.moistureLegend.hidden = mapMode !== MAP_MODES.recentMoisture;
     ui.modeButtons.forEach((button) => {
       button.setAttribute('aria-pressed', String(button.dataset.mapMode === mapMode));
     });
     fieldMap.setDisplayMode(mapMode);
+    if (mapMode === MAP_MODES.currentPotential) {
+      delete ui.currentPotentialBadge.dataset.tier;
+      ui.currentPotentialBadge.textContent = 'Checking current potential…';
+      ui.rank.textContent = 'Checking rain…';
+      ui.evidence.textContent = 'Combining habitat rank with recent moisture';
+    } else {
+      showHabitatSummary();
+    }
   }
 
   function setMapMode(nextMode) {
@@ -122,7 +182,9 @@ export function createSpotMode({
     weatherRequest += 1;
     renderMapMode();
     fieldMap.clearWeatherRegion();
-    if (mapMode === MAP_MODES.recentMoisture && currentSpot()) updateWeather(currentSpot());
+    fieldMap.showCurrentPotential([]);
+    if ([MAP_MODES.currentPotential, MAP_MODES.recentMoisture].includes(mapMode)
+      && currentSpot()) updateWeather(currentSpot());
   }
 
   function selectSpot(spotId) {
@@ -149,12 +211,7 @@ export function createSpotMode({
     const total = spotPackage.ranking?.total_eligible || spotPackage.spots.length;
     ui.progress.textContent = formatRankSummary(spot, total);
     ui.title.textContent = spot.forest_name || regionInfo?.name || 'Forest area';
-    ui.rank.textContent = rankTierLabel(spot.rank_tier);
-    ui.evidence.textContent = overviewSpots?.length && overviewMode
-      ? '12-region overview · zoom in to reveal every ranked area nearby'
-      : overviewSpots?.length
-        ? 'All areas in selected region · ranks within region'
-      : 'Relative habitat rank within this region · not a probability';
+    showHabitatSummary();
     ui.regionEvidence.textContent = formatRegionEvidence(regionInfo?.evidence);
     const totalAreas = regions.reduce((sum, region) => sum + region.eligible_cells, 0);
     ui.all.textContent = overviewSpots?.length && overviewMode
@@ -177,7 +234,10 @@ export function createSpotMode({
     fitAll = false;
     renderMapMode();
     fieldMap.clearWeatherRegion();
-    if (mapMode === MAP_MODES.recentMoisture) updateWeather(spot);
+    fieldMap.showCurrentPotential([]);
+    if ([MAP_MODES.currentPotential, MAP_MODES.recentMoisture].includes(mapMode)) {
+      updateWeather(spot);
+    }
   }
 
   function activate(value, context = {}) {

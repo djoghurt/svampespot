@@ -1,5 +1,7 @@
-import { MAP_MODES, moistureOverlayStyle } from './map-modes.js?v=2026-08-17-16';
-import { rankTierStyle } from './rank-display.js?v=2026-08-17-16';
+import {
+  MAP_MODES, currentPotentialStyle, moistureOverlayStyle,
+} from './map-modes.js?v=2026-08-17-17';
+import { rankTierStyle } from './rank-display.js?v=2026-08-17-17';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })
@@ -28,7 +30,58 @@ export function createFieldMap(element) {
   let weatherLayer;
   let viewChangeTimer;
   let displayMode = MAP_MODES.currentPotential;
+  let currentPotentialById = new Map();
   const spotRenderer = L.canvas({ padding: 0.5 });
+
+  function styleFor(properties, selected) {
+    if (displayMode === MAP_MODES.currentPotential) {
+      const potential = currentPotentialById.get(properties.spot_id);
+      const style = currentPotentialStyle(potential?.tier);
+      return {
+        color: selected ? '#f7fbfa' : '#294f49',
+        weight: selected ? 3 : 0.9,
+        opacity: potential ? 0.95 : 0.38,
+        fillColor: style.fillColor,
+        fillOpacity: potential
+          ? Math.min(0.92, style.fillOpacity + (selected ? 0.1 : 0))
+          : style.fillOpacity,
+      };
+    }
+    const tier = rankTierStyle(properties.rank_tier);
+    const muted = displayMode === MAP_MODES.recentMoisture;
+    return selected ? {
+      color: muted ? '#e7ece8' : '#fff0b5',
+      weight: muted ? 2 : 4,
+      opacity: 1,
+      fillColor: tier.fillColor,
+      fillOpacity: muted ? 0.16 : Math.min(0.90, tier.fillOpacity + 0.16),
+    } : {
+      color: muted ? '#526a65' : '#294f49',
+      weight: 0.8,
+      opacity: muted ? 0.35 : 0.72,
+      fillColor: tier.fillColor,
+      fillOpacity: muted ? 0.08 : tier.fillOpacity,
+    };
+  }
+
+  function tooltipText(properties) {
+    const percentile = Number.isInteger(properties.top_percent)
+      ? ` · Top ${properties.top_percent}%`
+      : '';
+    const potential = currentPotentialById.get(properties.spot_id);
+    return displayMode === MAP_MODES.currentPotential && potential
+      ? `${potential.label} · ${potential.score}/100`
+      : `#${properties.rank}${percentile}`;
+  }
+
+  function restyleSpots() {
+    if (!spotLayer) return;
+    spotLayer.eachLayer((layer) => {
+      const properties = layer.feature.properties;
+      layer.setStyle(styleFor(properties, properties.spot_id === selectedSpotId));
+      layer.setTooltipContent(tooltipText(properties));
+    });
+  }
 
   function clearVisitTargets() {
     if (visitLayer) map.removeLayer(visitLayer);
@@ -90,26 +143,10 @@ export function createFieldMap(element) {
     minimumZoom = null,
   ) {
     clearVisitTargets();
-    const styleFor = (properties, selected) => {
-      const tier = rankTierStyle(properties.rank_tier);
-      const muted = displayMode !== MAP_MODES.habitat;
-      return selected ? {
-        color: muted ? '#e7ece8' : '#fff0b5',
-        weight: muted ? 2 : 4,
-        opacity: 1,
-        fillColor: tier.fillColor,
-        fillOpacity: muted ? 0.16 : Math.min(0.90, tier.fillOpacity + 0.16),
-      } : {
-        color: muted ? '#526a65' : '#294f49',
-        weight: 0.8,
-        opacity: muted ? 0.35 : 0.72,
-        fillColor: tier.fillColor,
-        fillOpacity: muted ? 0.08 : tier.fillOpacity,
-      };
-    };
     if (spotSource !== spots) {
       if (spotLayer) map.removeLayer(spotLayer);
       spotLayersById = new Map();
+      currentPotentialById = new Map();
       const features = spots.map((spot) => ({
         type: 'Feature',
         properties: {
@@ -125,13 +162,9 @@ export function createFieldMap(element) {
         style: ({ properties }) => styleFor(properties, properties.spot_id === selectedId),
         onEachFeature: (feature, layer) => {
           spotLayersById.set(feature.properties.spot_id, layer);
-          const percentile = Number.isInteger(feature.properties.top_percent)
-            ? ` · Top ${feature.properties.top_percent}%`
-            : '';
-          layer.bindTooltip(
-            `#${feature.properties.rank}${percentile}`,
-            { permanent: false, direction: 'top', sticky: true },
-          );
+          layer.bindTooltip(tooltipText(feature.properties), {
+            permanent: false, direction: 'top', sticky: true,
+          });
           layer.on('click', () => onSelect(feature.properties.spot_id));
         },
       }).addTo(map);
@@ -176,21 +209,14 @@ export function createFieldMap(element) {
 
   function setDisplayMode(mode) {
     displayMode = mode;
-    if (!spotLayer) return;
-    spotLayer.eachLayer((layer) => {
-      const selected = layer.feature.properties.spot_id === selectedSpotId;
-      const tier = rankTierStyle(layer.feature.properties.rank_tier);
-      const muted = mode !== MAP_MODES.habitat;
-      layer.setStyle(selected ? {
-        color: muted ? '#e7ece8' : '#fff0b5', weight: muted ? 2 : 4, opacity: 1,
-        fillColor: tier.fillColor,
-        fillOpacity: muted ? 0.16 : Math.min(0.90, tier.fillOpacity + 0.16),
-      } : {
-        color: muted ? '#526a65' : '#294f49', weight: 0.8,
-        opacity: muted ? 0.35 : 0.72, fillColor: tier.fillColor,
-        fillOpacity: muted ? 0.08 : tier.fillOpacity,
-      });
-    });
+    restyleSpots();
+  }
+
+  function showCurrentPotential(values) {
+    currentPotentialById = new Map((values || []).map(({ spot_id: spotId, potential }) => (
+      [spotId, potential]
+    )));
+    restyleSpots();
   }
 
   function clearWeatherRegion() {
@@ -240,6 +266,6 @@ export function createFieldMap(element) {
 
   return {
     map, onViewChanged, showVisit, showSpots, showLocation,
-    clearWeatherRegion, setDisplayMode, showWeatherGrid,
+    clearWeatherRegion, setDisplayMode, showCurrentPotential, showWeatherGrid,
   };
 }
