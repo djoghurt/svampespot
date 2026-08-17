@@ -3,10 +3,10 @@ import {
 } from './weather.js';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, currentPotentialPresentation, mapModePresentation,
-} from './map-modes.js?v=2026-08-17-19';
+} from './map-modes.js?v=2026-08-17-20';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-19';
+} from './rank-display.js?v=2026-08-17-20';
 
 const element = (id) => document.getElementById(id);
 
@@ -292,7 +292,6 @@ export function createSpotMode({
       index = 0;
       if (!wasActive) overviewMode = Boolean(overviewSpots?.length);
       fitAll = overviewMode || !overviewSpots;
-      weather.clear();
     }
     if (packageChanged || overviewChanged) {
       mapSpots = overviewMode ? overviewSpots : value.spots;
