@@ -1,9 +1,9 @@
 const TIERS = {
-  highest: { label: 'Top 5%', fillColor: '#e23d28', fillOpacity: 0.76 },
-  high: { label: '6–20%', fillColor: '#f29f31', fillOpacity: 0.66 },
-  medium: { label: '21–40%', fillColor: '#e9d758', fillOpacity: 0.54 },
-  low: { label: '41–70%', fillColor: '#3f9e94', fillOpacity: 0.42 },
-  lowest: { label: '71–100%', fillColor: '#365f80', fillOpacity: 0.30 },
+  highest: { label: 'Top 5%', fillColor: '#e23d28', fillOpacity: 0.80 },
+  high: { label: '6–20%', fillColor: '#f29f31', fillOpacity: 0.72 },
+  medium: { label: '21–40%', fillColor: '#e9d758', fillOpacity: 0.62 },
+  low: { label: '41–70%', fillColor: '#1f9ac6', fillOpacity: 0.52 },
+  lowest: { label: '71–100%', fillColor: '#7b4ab2', fillOpacity: 0.42 },
 };
 
 export function rankTierStyle(tier) {

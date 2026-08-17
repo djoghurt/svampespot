@@ -1,4 +1,4 @@
-import { rankTierStyle } from './rank-display.js?v=2026-08-17-12';
+import { rankTierStyle } from './rank-display.js?v=2026-08-17-13';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })
@@ -89,7 +89,7 @@ export function createFieldMap(element) {
         weight: 4,
         opacity: 1,
         fillColor: tier.fillColor,
-        fillOpacity: Math.min(0.76, tier.fillOpacity + 0.16),
+        fillOpacity: Math.min(0.90, tier.fillOpacity + 0.16),
       } : {
         color: '#294f49',
         weight: 0.8,

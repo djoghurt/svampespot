@@ -1,7 +1,7 @@
 import { fetchRainHistory } from './weather.js';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-12';
+} from './rank-display.js?v=2026-08-17-13';
 
 const element = (id) => document.getElementById(id);
 
