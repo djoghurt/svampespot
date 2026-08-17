@@ -19,3 +19,10 @@ export function formatRankSummary(spot, total) {
     ? `Top ${spot.top_percent}% · rank ${spot.rank} of ${total}`
     : `Rank ${spot.rank} of ${total}`;
 }
+
+export function formatRegionEvidence(evidence) {
+  const positives = Number(evidence?.positive_visits) || 0;
+  if (positives === 0) return 'No positive development visits · ranking extrapolated';
+  if (!evidence?.evaluable) return `Sparse development evidence · ${positives} positive visits`;
+  return `Development only · ${positives} positive visits · historical lift ${Number(evidence.visit_lift).toFixed(2)}`;
+}

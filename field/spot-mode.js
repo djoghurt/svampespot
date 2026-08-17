@@ -1,9 +1,11 @@
 import { fetchRainHistory } from './weather.js';
-import { formatRankSummary, rankTierLabel } from './rank-display.js';
+import { formatRankSummary, formatRegionEvidence, rankTierLabel } from './rank-display.js';
 
 const element = (id) => document.getElementById(id);
 
-export function createSpotMode({ fieldMap, packageInput, onSelectionChanged, showToast }) {
+export function createSpotMode({
+  fieldMap, packageInput, onSelectionChanged, onRegionChanged, showToast,
+}) {
   const ui = {
     state: element('spotState'), mode: element('modeLabel'), progress: element('spotProgress'),
     title: element('spotTitle'), rank: element('spotRank'), evidence: element('spotEvidence'),
@@ -11,13 +13,17 @@ export function createSpotMode({ fieldMap, packageInput, onSelectionChanged, sho
     rain7: element('rain7'), rain30: element('rain30'), lastRain: element('lastRain'),
     apple: element('spotAppleMaps'), google: element('spotGoogleMaps'),
     previous: element('previousSpot'), next: element('nextSpot'), all: element('showAllSpots'),
-    change: element('changePackage'),
+    change: element('changePackage'), region: element('regionSelect'),
+    regionEvidence: element('regionEvidence'),
   };
   let spotPackage = null;
   let index = 0;
   let fitAll = true;
   let active = false;
   let weatherRequest = 0;
+  let publicLand = null;
+  let regionInfo = null;
+  let regions = [];
   const weather = new Map();
 
   const currentSpot = () => spotPackage?.spots[index] || null;
@@ -73,20 +79,24 @@ export function createSpotMode({ fieldMap, packageInput, onSelectionChanged, sho
     if (!spot) return;
     const total = spotPackage.ranking?.total_eligible || spotPackage.spots.length;
     ui.progress.textContent = formatRankSummary(spot, total);
-    ui.title.textContent = spot.forest_name || 'Silkeborg forest area';
+    ui.title.textContent = spot.forest_name || regionInfo?.name || 'Forest area';
     ui.rank.textContent = rankTierLabel(spot.rank_tier);
-    ui.evidence.textContent = 'Relative habitat rank · experimental, not field validated';
+    ui.evidence.textContent = 'Relative habitat rank within this region · not a probability';
+    ui.regionEvidence.textContent = formatRegionEvidence(regionInfo?.evidence);
+    ui.region.value = spotPackage.region;
     ui.all.textContent = `Show all ${total} areas`;
     ui.previous.disabled = index === 0;
     ui.next.disabled = index === spotPackage.spots.length - 1;
     navigationLinks(spot);
-    fieldMap.showSpots(spotPackage.spots, spot.spot_id, selectSpot, fitAll);
+    fieldMap.showSpots(spotPackage.spots, spot.spot_id, selectSpot, fitAll, publicLand);
     fitAll = false;
     updateWeather(spot);
   }
 
-  function activate(value) {
+  function activate(value, context = {}) {
     active = true;
+    publicLand = context.publicLand || null;
+    regionInfo = context.regionInfo || null;
     if (spotPackage !== value) {
       spotPackage = value;
       index = 0;
@@ -104,10 +114,32 @@ export function createSpotMode({ fieldMap, packageInput, onSelectionChanged, sho
     ui.mode.textContent = 'Field pilot';
   }
 
+  function setRegions(values) {
+    if (regions === values) return;
+    regions = values;
+    ui.region.replaceChildren(...regions.map((region) => {
+      const option = document.createElement('option');
+      option.value = region.key;
+      option.textContent = `${region.name} · ${region.eligible_cells}`;
+      return option;
+    }));
+  }
+
+  function setRegionLoading(loading) {
+    ui.region.disabled = loading;
+  }
+
+  function restoreRegionSelection() {
+    if (spotPackage) ui.region.value = spotPackage.region;
+  }
+
   ui.previous.addEventListener('click', () => selectSpot(spotPackage.spots[index - 1].spot_id));
   ui.next.addEventListener('click', () => selectSpot(spotPackage.spots[index + 1].spot_id));
   ui.all.addEventListener('click', () => { fitAll = true; render(); });
   ui.change.addEventListener('click', () => packageInput.click());
+  ui.region.addEventListener('change', () => onRegionChanged(ui.region.value));
 
-  return { activate, deactivate, currentCenter };
+  return {
+    activate, deactivate, currentCenter, restoreRegionSelection, setRegionLoading, setRegions,
+  };
 }

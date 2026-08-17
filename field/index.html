@@ -32,6 +32,7 @@
         <span><i class="rank-swatch medium"></i>21–40%</span>
         <span><i class="rank-swatch low"></i>41–70%</span>
         <span><i class="rank-swatch lowest"></i>71–100%</span>
+        <span class="public-boundary-key"><i></i>Public-land edge</span>
       </aside>
       <div class="aperture" aria-live="polite">
         <span id="bearing" class="bearing">—</span>
@@ -50,11 +51,16 @@
       </div>
 
       <div id="spotState" hidden>
+        <div class="region-picker">
+          <label for="regionSelect">Map region</label>
+          <select id="regionSelect" aria-describedby="regionEvidence"></select>
+          <p id="regionEvidence">Development-only regional evidence</p>
+        </div>
         <div class="visit-heading">
           <div>
             <p id="spotProgress" class="eyebrow"></p>
             <h1 id="spotTitle">Silkeborg forest area</h1>
-            <p id="spotEvidence" class="rank-evidence">Relative habitat rank · experimental, not field validated</p>
+            <p id="spotEvidence" class="rank-evidence">Relative habitat rank within this region · not a probability</p>
           </div>
           <span id="spotRank" class="status-chip">Habitat #1</span>
         </div>
@@ -76,7 +82,7 @@
           <a id="spotAppleMaps" class="destination-button primary-destination" href="#" target="_blank" rel="noreferrer">Open area in Apple Maps</a>
           <a id="spotGoogleMaps" class="destination-button" href="#" target="_blank" rel="noreferrer">Google Maps</a>
         </div>
-        <p class="access-note">The marker is inside the predicted area. Choose legal parking and public access nearby.</p>
+        <p class="access-note"><strong>Public-land reference:</strong> ranked areas are clipped to the prepared public-land dataset and the dashed line shows its wider boundary. Boundaries may change—follow signs, closures, and local access rules.</p>
         <div class="spot-nav">
           <button id="previousSpot" type="button">Previous</button>
           <button id="nextSpot" type="button">Next</button>

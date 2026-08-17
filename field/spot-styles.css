@@ -29,6 +29,38 @@
 .rank-swatch.medium { background: #7b9d6b; }
 .rank-swatch.low { background: #4f7568; }
 .rank-swatch.lowest { background: #35534f; }
+.public-boundary-key { margin-top: 3px; padding-top: 5px; border-top: 1px solid #54716c; }
+.public-boundary-key i {
+  width: 18px;
+  height: 0;
+  border-top: 2px dashed #4fb3a8;
+}
+.region-picker {
+  position: relative;
+  margin: -4px 0 20px;
+  padding: 12px 14px;
+  border: 1px solid #c6d3cd;
+  border-radius: 15px;
+  background: #e9efeb;
+}
+.region-picker label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--moss);
+  font: 700 .65rem ui-monospace, monospace;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+}
+.region-picker select {
+  min-height: 42px;
+  padding: 0 34px 0 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--deep);
+  background: transparent;
+  font-weight: 760;
+}
+.region-picker p { margin: 5px 0 0; color: #5d6e68; font-size: .68rem; line-height: 1.35; }
 .rank-evidence { margin: 2px 0 0; color: #65756f; font-size: .72rem; line-height: 1.35; }
 
 .rain-card {
@@ -57,6 +89,7 @@
 .rain-stats span { display: block; margin-top: 3px; color: #abc0bb; font-size: .68rem; }
 .rain-card > p, .access-note { margin: 0; color: #b9ccc7; font-size: .76rem; line-height: 1.45; }
 .access-note { margin: -6px 2px 14px; color: #596a65; }
+.access-note strong { color: #284a44; }
 .destination-actions .primary-destination { border-color: var(--ochre); background: var(--ochre); }
 .spot-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .spot-nav button {

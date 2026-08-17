@@ -7,7 +7,12 @@ import {
   formatTimer,
   validateImportedPackage,
 } from './core.js';
-import { chooseInitialPackage, loadDefaultSpotPackage } from './default-spots.js';
+import {
+  chooseInitialPackage,
+  loadRegionManifest,
+  loadRegionPublicLand,
+  loadRegionSpotPackage,
+} from './default-spots.js';
 import { createFieldMap } from './map.js';
 import { createSpotMode } from './spot-mode.js';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
@@ -36,12 +41,15 @@ const state = {
   track: [],
   watchId: null,
   timerId: null,
+  regionManifest: null,
+  publicLand: null,
 };
 
 const spotMode = createSpotMode({
   fieldMap,
   packageInput: ui.input,
   onSelectionChanged: () => updateInstrument(),
+  onRegionChanged: switchRegion,
   showToast,
 });
 
@@ -114,7 +122,11 @@ function render() {
   ui.visit.hidden = !hasPackage || hasSpots;
   if (!hasPackage) return;
   if (hasSpots) {
-    spotMode.activate(state.package);
+    const regionInfo = state.regionManifest?.regions.find(
+      ({ key }) => key === state.package.region,
+    ) || null;
+    spotMode.setRegions(state.regionManifest?.regions || []);
+    spotMode.activate(state.package, { publicLand: state.publicLand, regionInfo });
     updateInstrument();
     return;
   }
@@ -146,6 +158,14 @@ async function importPackage(file) {
   state.exclusions = [];
   state.active = null;
   state.index = 0;
+  state.publicLand = null;
+  if (parsed.package_type === 'ranked_spots') {
+    try {
+      state.publicLand = await loadRegionPublicLand(parsed.region);
+    } catch {
+      // Imported packages remain usable without the optional reference outline.
+    }
+  }
   await saveState('package', parsed);
   await saveState('results', []);
   await saveState('exclusions', []);
@@ -154,6 +174,28 @@ async function importPackage(file) {
   showToast(parsed.package_type === 'ranked_spots'
     ? parsed.spots.length + ' habitat spots imported.'
     : parsed.visits.length + ' blinded visits imported.');
+}
+
+async function switchRegion(region) {
+  const regionInfo = state.regionManifest?.regions.find(({ key }) => key === region);
+  if (!regionInfo || region === state.package?.region) return;
+  spotMode.setRegionLoading(true);
+  try {
+    const [publishedPackage, publicLand] = await Promise.all([
+      loadRegionSpotPackage(region),
+      loadRegionPublicLand(region),
+    ]);
+    state.package = publishedPackage;
+    state.publicLand = publicLand;
+    await saveState('package', publishedPackage);
+    render();
+    showToast(`${regionInfo.name} loaded · ${regionInfo.eligible_cells} ranked areas.`);
+  } catch (error) {
+    showToast(error.message);
+    spotMode.restoreRegionSelection();
+  } finally {
+    spotMode.setRegionLoading(false);
+  }
 }
 async function startVisit() {
   const visit = currentVisit();
@@ -268,9 +310,21 @@ async function exportResults() {
 }
 async function initialize() {
   const storedPackage = await loadState('package') || null;
+  try {
+    state.regionManifest = await loadRegionManifest();
+  } catch {
+    // A stored or manually imported package can still work without the region list.
+  }
+  const preferredRegion = storedPackage?.package_type === 'ranked_spots'
+    && state.regionManifest?.regions.some(({ key }) => key === storedPackage.region)
+    ? storedPackage.region
+    : state.regionManifest?.default_region || 'silkeborg';
   let publishedPackage = null;
   try {
-    publishedPackage = await loadDefaultSpotPackage();
+    [publishedPackage, state.publicLand] = await Promise.all([
+      loadRegionSpotPackage(preferredRegion),
+      loadRegionPublicLand(preferredRegion),
+    ]);
   } catch {
     // Keep the stored package or import screen when the public package is unavailable.
   }

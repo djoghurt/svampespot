@@ -8,11 +8,16 @@ export function createFieldMap(element) {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map);
+  map.createPane('publicBoundaryPane');
+  map.getPane('publicBoundaryPane').style.zIndex = 430;
+  map.getPane('publicBoundaryPane').style.pointerEvents = 'none';
 
   let visitLayer;
   let approachMarker;
   let spotLayer;
   let spotSource;
+  let publicLandLayer;
+  let publicLandSource;
   let selectedSpotId;
   let spotLayersById = new Map();
   let locationMarker;
@@ -28,8 +33,11 @@ export function createFieldMap(element) {
   function clearTargets() {
     clearVisitTargets();
     if (spotLayer) map.removeLayer(spotLayer);
+    if (publicLandLayer) map.removeLayer(publicLandLayer);
     spotLayer = null;
     spotSource = null;
+    publicLandLayer = null;
+    publicLandSource = null;
     selectedSpotId = null;
     spotLayersById = new Map();
   }
@@ -63,7 +71,7 @@ export function createFieldMap(element) {
     map.fitBounds(bounds.pad(0.35), { animate: false });
   }
 
-  function showSpots(spots, selectedId, onSelect, fitAll = false) {
+  function showSpots(spots, selectedId, onSelect, fitAll = false, publicLand = null) {
     clearVisitTargets();
     const styleFor = (properties, selected) => {
       const tier = rankTierStyle(properties.rank_tier);
@@ -110,6 +118,21 @@ export function createFieldMap(element) {
         },
       }).addTo(map);
       spotSource = spots;
+    }
+    if (publicLandSource !== publicLand) {
+      if (publicLandLayer) map.removeLayer(publicLandLayer);
+      publicLandLayer = publicLand ? L.geoJSON(publicLand, {
+        pane: 'publicBoundaryPane',
+        interactive: false,
+        style: {
+          color: '#0d5049',
+          weight: 3,
+          opacity: 0.92,
+          dashArray: '9 6',
+          fill: false,
+        },
+      }).addTo(map) : null;
+      publicLandSource = publicLand;
     }
     if (selectedSpotId !== selectedId) {
       for (const spotId of [selectedSpotId, selectedId]) {
