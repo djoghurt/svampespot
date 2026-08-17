@@ -1,7 +1,7 @@
 import {
   MAP_MODES, currentPotentialStyle, moistureOverlayStyle,
-} from './map-modes.js?v=2026-08-17-27';
-import { formatHabitatStanding, rankTierStyle } from './rank-display.js?v=2026-08-17-27';
+} from './map-modes.js?v=2026-08-17-28';
+import { formatHabitatStanding, rankTierStyle } from './rank-display.js?v=2026-08-17-28';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })

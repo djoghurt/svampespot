@@ -40,9 +40,9 @@ export function mapModePresentation(mode) {
 }
 
 const CURRENT_POTENTIAL_COLOURS = Object.freeze({
-  strong: '#e23d28',
-  promising: '#e9d758',
-  low: '#7b4ab2',
+  strong: '#00b8c8',
+  promising: '#e0c94f',
+  low: '#b44b4b',
 });
 
 const clamp = (value) => Math.max(0, Math.min(1, value));
@@ -96,4 +96,4 @@ export function moistureOverlayStyle(label) {
     interactive: false,
   };
 }
-import { formatHabitatStanding } from './rank-display.js?v=2026-08-17-27';
+import { formatHabitatStanding } from './rank-display.js?v=2026-08-17-28';
