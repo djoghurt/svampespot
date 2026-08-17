@@ -1,4 +1,4 @@
-const CACHE = 'svampespot-field-v5';
+const CACHE = 'svampespot-field-v6';
 const SHELL = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const SHELL = [
   './core.js',
   './default-spots.js',
   './map.js',
+  './rank-display.js',
   './spot-mode.js',
   './storage.js',
   './styles.css',

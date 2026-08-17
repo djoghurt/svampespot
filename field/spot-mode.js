@@ -1,11 +1,13 @@
 import { fetchRainHistory } from './weather.js';
+import { formatRankSummary, rankTierLabel } from './rank-display.js';
 
 const element = (id) => document.getElementById(id);
 
 export function createSpotMode({ fieldMap, packageInput, onSelectionChanged, showToast }) {
   const ui = {
     state: element('spotState'), mode: element('modeLabel'), progress: element('spotProgress'),
-    title: element('spotTitle'), rank: element('spotRank'), rainLabel: element('rainLabel'),
+    title: element('spotTitle'), rank: element('spotRank'), evidence: element('spotEvidence'),
+    rainLabel: element('rainLabel'),
     rain7: element('rain7'), rain30: element('rain30'), lastRain: element('lastRain'),
     apple: element('spotAppleMaps'), google: element('spotGoogleMaps'),
     previous: element('previousSpot'), next: element('nextSpot'), all: element('showAllSpots'),
@@ -69,9 +71,12 @@ export function createSpotMode({ fieldMap, packageInput, onSelectionChanged, sho
   function render() {
     const spot = currentSpot();
     if (!spot) return;
-    ui.progress.textContent = `Spot ${index + 1} of ${spotPackage.spots.length}`;
+    const total = spotPackage.ranking?.total_eligible || spotPackage.spots.length;
+    ui.progress.textContent = formatRankSummary(spot, total);
     ui.title.textContent = spot.forest_name || 'Silkeborg forest area';
-    ui.rank.textContent = `Habitat #${spot.rank}`;
+    ui.rank.textContent = rankTierLabel(spot.rank_tier);
+    ui.evidence.textContent = 'Relative habitat rank · experimental, not field validated';
+    ui.all.textContent = `Show all ${total} areas`;
     ui.previous.disabled = index === 0;
     ui.next.disabled = index === spotPackage.spots.length - 1;
     navigationLinks(spot);

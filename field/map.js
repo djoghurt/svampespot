@@ -1,3 +1,5 @@
+import { rankTierStyle } from './rank-display.js';
+
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })
     .setView([56.16, 9.55], 11);
@@ -10,15 +12,26 @@ export function createFieldMap(element) {
   let visitLayer;
   let approachMarker;
   let spotLayer;
+  let spotSource;
+  let selectedSpotId;
+  let spotLayersById = new Map();
   let locationMarker;
+  const spotRenderer = L.canvas({ padding: 0.5 });
 
-  function clearTargets() {
+  function clearVisitTargets() {
     if (visitLayer) map.removeLayer(visitLayer);
     if (approachMarker) map.removeLayer(approachMarker);
-    if (spotLayer) map.removeLayer(spotLayer);
     visitLayer = null;
     approachMarker = null;
+  }
+
+  function clearTargets() {
+    clearVisitTargets();
+    if (spotLayer) map.removeLayer(spotLayer);
     spotLayer = null;
+    spotSource = null;
+    selectedSpotId = null;
+    spotLayersById = new Map();
   }
 
   function showVisit(visit) {
@@ -51,35 +64,68 @@ export function createFieldMap(element) {
   }
 
   function showSpots(spots, selectedId, onSelect, fitAll = false) {
-    clearTargets();
-    const features = spots.map((spot) => ({
-      type: 'Feature',
-      properties: { spot_id: spot.spot_id, rank: spot.rank },
-      geometry: spot.geometry,
-    }));
-    spotLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
-      style: ({ properties }) => {
-        const selected = properties.spot_id === selectedId;
-        return {
-          color: selected ? '#f4c86a' : '#246b65',
-          weight: selected ? 4 : 2,
-          opacity: 1,
-          fillColor: selected ? '#e6a23c' : '#4d6a4b',
-          fillOpacity: selected ? 0.42 : 0.22,
-        };
-      },
-      onEachFeature: (feature, layer) => {
-        layer.bindTooltip(`#${feature.properties.rank}`, { permanent: false, direction: 'top' });
-        layer.on('click', () => onSelect(feature.properties.spot_id));
-      },
-    }).addTo(map);
+    clearVisitTargets();
+    const styleFor = (properties, selected) => {
+      const tier = rankTierStyle(properties.rank_tier);
+      return selected ? {
+        color: '#fff0b5',
+        weight: 4,
+        opacity: 1,
+        fillColor: tier.fillColor,
+        fillOpacity: Math.min(0.76, tier.fillOpacity + 0.16),
+      } : {
+        color: '#294f49',
+        weight: 0.8,
+        opacity: 0.72,
+        fillColor: tier.fillColor,
+        fillOpacity: tier.fillOpacity,
+      };
+    };
+    if (spotSource !== spots) {
+      if (spotLayer) map.removeLayer(spotLayer);
+      spotLayersById = new Map();
+      const features = spots.map((spot) => ({
+        type: 'Feature',
+        properties: {
+          spot_id: spot.spot_id,
+          rank: spot.rank,
+          top_percent: spot.top_percent,
+          rank_tier: spot.rank_tier,
+        },
+        geometry: spot.geometry,
+      }));
+      spotLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
+        renderer: spotRenderer,
+        style: ({ properties }) => styleFor(properties, properties.spot_id === selectedId),
+        onEachFeature: (feature, layer) => {
+          spotLayersById.set(feature.properties.spot_id, layer);
+          const percentile = Number.isInteger(feature.properties.top_percent)
+            ? ` · Top ${feature.properties.top_percent}%`
+            : '';
+          layer.bindTooltip(
+            `#${feature.properties.rank}${percentile}`,
+            { permanent: false, direction: 'top', sticky: true },
+          );
+          layer.on('click', () => onSelect(feature.properties.spot_id));
+        },
+      }).addTo(map);
+      spotSource = spots;
+    }
+    if (selectedSpotId !== selectedId) {
+      for (const spotId of [selectedSpotId, selectedId]) {
+        const layer = spotLayersById.get(spotId);
+        if (layer) layer.setStyle(styleFor(
+          layer.feature.properties,
+          layer.feature.properties.spot_id === selectedId,
+        ));
+      }
+      selectedSpotId = selectedId;
+    }
     const selected = spots.find(({ spot_id: id }) => id === selectedId);
     if (fitAll) {
       map.fitBounds(spotLayer.getBounds().pad(0.08), { animate: false });
     } else if (selected) {
-      const selectedLayer = [...spotLayer.getLayers()].find(
-        (layer) => layer.feature.properties.spot_id === selectedId,
-      );
+      const selectedLayer = spotLayersById.get(selectedId);
       map.fitBounds(selectedLayer.getBounds().pad(1.1), { animate: false, maxZoom: 15 });
     }
   }

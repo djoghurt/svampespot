@@ -7,7 +7,7 @@ import {
   formatTimer,
   validateImportedPackage,
 } from './core.js';
-import { loadDefaultSpotPackage } from './default-spots.js';
+import { chooseInitialPackage, loadDefaultSpotPackage } from './default-spots.js';
 import { createFieldMap } from './map.js';
 import { createSpotMode } from './spot-mode.js';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
@@ -267,14 +267,16 @@ async function exportResults() {
   }
 }
 async function initialize() {
-  state.package = await loadState('package') || null;
-  if (!state.package) {
-    try {
-      state.package = await loadDefaultSpotPackage();
-      await saveState('package', state.package);
-    } catch {
-      // Keep the import screen as a fallback when the public package is unavailable.
-    }
+  const storedPackage = await loadState('package') || null;
+  let publishedPackage = null;
+  try {
+    publishedPackage = await loadDefaultSpotPackage();
+  } catch {
+    // Keep the stored package or import screen when the public package is unavailable.
+  }
+  state.package = chooseInitialPackage(storedPackage, publishedPackage);
+  if (state.package && state.package !== storedPackage) {
+    await saveState('package', state.package);
   }
   state.results = await loadState('results') || [];
   state.exclusions = await loadState('exclusions') || [];

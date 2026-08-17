@@ -17,6 +17,7 @@ const allowed = new Set([
   "field/index.html",
   "field/manifest.webmanifest",
   "field/map.js",
+  "field/rank-display.js",
   "field/spot-mode.js",
   "field/spot-styles.css",
   "field/spots/silkeborg.json",

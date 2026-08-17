@@ -38,6 +38,13 @@ export function validateSpotPackage(value) {
     throw new Error('This is not a Svampespot ranked-spots package');
   }
   const seen = new Set();
+  if (value.ranking && (value.ranking.measure !== 'relative_habitat_rank'
+    || !Number.isInteger(value.ranking.total_eligible)
+    || value.ranking.total_eligible < value.spots.length
+    || value.ranking.calibrated_probability !== false
+    || value.ranking.field_validated !== false)) {
+    throw new Error('Ranked spots require truthful relative-ranking metadata');
+  }
   for (const spot of value.spots) {
     if ('score' in spot || 'arm' in spot || 'model' in spot) {
       throw new Error('Spot package contains private model data');
@@ -48,6 +55,14 @@ export function validateSpotPackage(value) {
     seen.add(spot.spot_id);
     if (!Number.isInteger(spot.rank) || spot.rank < 1 || !finiteCoordinate(spot.center)) {
       throw new Error('Ranked spot requires a rank and area marker');
+    }
+    if (spot.top_percent != null && (!Number.isInteger(spot.top_percent)
+      || spot.top_percent < 1 || spot.top_percent > 100)) {
+      throw new Error('Ranked spot requires a valid relative percentile');
+    }
+    if (spot.rank_tier != null
+      && !['highest', 'high', 'medium', 'low', 'lowest'].includes(spot.rank_tier)) {
+      throw new Error('Ranked spot requires a valid relative-rank tier');
     }
     if (!spot.geometry || !['Polygon', 'MultiPolygon'].includes(spot.geometry.type)) {
       throw new Error('Ranked spot requires a target polygon');
