@@ -49,6 +49,8 @@ const allowed = new Set([
   "field/storage.js",
   "field/styles.css",
   "field/sw.js",
+  "field/trip-log-mode.js",
+  "field/trip-log.js",
   "field/vendor/images/layers-2x.png",
   "field/vendor/images/layers.png",
   "field/vendor/images/marker-icon-2x.png",

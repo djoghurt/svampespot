@@ -14,9 +14,10 @@ import {
   loadRegionSpotPackage,
   nearestMapRegion,
   REGION_DETAIL_ZOOM,
-} from './default-spots.js?v=2026-08-17-28';
-import { createFieldMap } from './map.js?v=2026-08-17-28';
-import { createSpotMode } from './spot-mode.js?v=2026-08-17-28';
+} from './default-spots.js?v=2026-08-17-29';
+import { createFieldMap } from './map.js?v=2026-08-17-29';
+import { createSpotMode } from './spot-mode.js?v=2026-08-17-29';
+import { createTripLogMode } from './trip-log-mode.js?v=2026-08-17-29';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
 
 const element = (id) => document.getElementById(id);
@@ -40,6 +41,7 @@ const state = {
   index: 0,
   active: null,
   position: null,
+  positionAccuracy: null,
   track: [],
   watchId: null,
   timerId: null,
@@ -50,14 +52,29 @@ const state = {
   publicLands: new Map(),
 };
 let regionRequest = 0;
+let tripLogMode;
 
 const spotMode = createSpotMode({
   detailZoom: REGION_DETAIL_ZOOM,
   fieldMap,
   packageInput: ui.input,
-  onSelectionChanged: () => updateInstrument(),
+  onSelectionChanged: () => {
+    updateInstrument();
+    tripLogMode?.updateSelected();
+  },
   onRegionChanged: switchRegion,
   showToast,
+});
+
+tripLogMode = createTripLogMode({
+  capturePosition: () => captureCurrentPosition({ notify: false }),
+  fieldMap,
+  getPackage: () => state.package,
+  getPosition: () => state.position ? {
+    coordinates: [...state.position], accuracy_m: state.positionAccuracy,
+  } : null,
+  showToast,
+  spotMode,
 });
 
 const currentVisit = () => state.package?.visits?.[state.index] || null;
@@ -84,6 +101,7 @@ function updateInstrument() {
 }
 function updatePosition(position) {
   state.position = [position.coords.longitude, position.coords.latitude];
+  state.positionAccuracy = Number(position.coords.accuracy) || null;
   fieldMap.showLocation(state.position, position.coords.accuracy);
   if (state.active) {
     state.track.push([
@@ -92,11 +110,25 @@ function updatePosition(position) {
   }
   updateInstrument();
 }
+function captureCurrentPosition({ notify = true } = {}) {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      if (notify) showToast('Location is not available on this device.');
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition((position) => {
+      updatePosition(position);
+      resolve({ coordinates: [...state.position], accuracy_m: state.positionAccuracy });
+    }, () => {
+      if (notify) showToast('Allow location access to show distance and direction.');
+      resolve(null);
+    }, { enableHighAccuracy: true, timeout: 15000 });
+  });
+}
 function requestLocation(watch = false) {
-  if (!navigator.geolocation) return showToast('Location is not available on this device.');
-  navigator.geolocation.getCurrentPosition(updatePosition, () => {
-    showToast('Allow location access to show distance and direction.');
-  }, { enableHighAccuracy: true, timeout: 15000 });
+  if (!navigator.geolocation) return captureCurrentPosition();
+  captureCurrentPosition();
   if (watch && state.watchId == null) {
     state.watchId = navigator.geolocation.watchPosition(updatePosition, () => {}, {
       enableHighAccuracy: true, maximumAge: 5000,
@@ -127,7 +159,10 @@ function render() {
   ui.empty.hidden = hasPackage;
   const hasSpots = state.package?.package_type === 'ranked_spots';
   ui.visit.hidden = !hasPackage || hasSpots;
-  if (!hasPackage) return;
+  if (!hasPackage) {
+    tripLogMode.deactivate();
+    return;
+  }
   if (hasSpots) {
     const regionInfo = state.regionManifest?.regions.find(
       ({ key }) => key === state.package.region,
@@ -138,10 +173,12 @@ function render() {
       publicLand: state.publicLand,
       regionInfo,
     });
+    tripLogMode.activate();
     updateInstrument();
     return;
   }
   spotMode.deactivate();
+  tripLogMode.deactivate();
   const visit = currentVisit();
   const complete = completedIds().has(visit.visit_id);
   const pairStarted = state.results.some(({ pair_id: pairId }) => pairId === visit.pair_id);
@@ -357,6 +394,7 @@ async function exportResults() {
   }
 }
 async function initialize() {
+  await tripLogMode.initialize();
   const storedPackage = await loadState('package') || null;
   try {
     state.regionManifest = await loadRegionManifest();
@@ -402,7 +440,7 @@ async function initialize() {
     render();
   }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=2026-08-17-28', {
+    navigator.serviceWorker.register('./sw.js?v=2026-08-17-29', {
       updateViaCache: 'none',
     }).catch(() => {});
   }

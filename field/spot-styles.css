@@ -119,6 +119,94 @@
 .map-mode-badge[data-tier="promising"] { color: #24302d; background: rgb(224 201 79 / 96%); }
 .map-mode-badge[data-tier="low"] { background: rgb(145 54 54 / 95%); }
 
+.field-log-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin: 13px 0;
+  padding: 10px 11px;
+  border: 1px solid #c5d4cf;
+  border-left: 4px solid #00a9b8;
+  border-radius: 13px;
+  background: #e8efeb;
+}
+.field-log-bar span {
+  display: block;
+  color: #63736e;
+  font: 680 .58rem ui-monospace, monospace;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.field-log-bar strong { display: block; margin-top: 2px; font-size: .78rem; }
+.field-log-actions { display: flex; gap: 6px; }
+.field-log-actions button {
+  min-height: 40px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--deep);
+  background: #d5e0db;
+  font-size: .7rem;
+  font-weight: 760;
+}
+.field-log-actions #logSpotVisit { color: white; background: var(--spruce); }
+.trip-log-context {
+  padding: 11px 12px;
+  border-radius: 12px;
+  color: #d8e5e1;
+  background: var(--spruce);
+  font-size: .76rem;
+  line-height: 1.45;
+}
+.trip-location-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid #c5d4cf;
+  border-radius: 12px;
+}
+.trip-location-row strong, .trip-location-row span { display: block; }
+.trip-location-row strong { font-size: .78rem; }
+.trip-location-row span { margin-top: 2px; color: #687771; font-size: .64rem; line-height: 1.35; }
+.trip-location-row button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  padding: 0 10px;
+  color: var(--deep);
+  background: #dfe8e3;
+  font-size: .68rem;
+  font-weight: 720;
+}
+.trip-species-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.input-unit { position: relative; display: block; }
+.input-unit input { padding-right: 42px; }
+.input-unit i {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  color: #67756f;
+  font-size: .7rem;
+  font-style: normal;
+  transform: translateY(-50%);
+}
+.form-note, .history-summary { margin: 0; color: #687771; font-size: .7rem; line-height: 1.4; }
+.trip-history-list { display: grid; gap: 8px; margin: 14px 0; }
+.trip-history-card {
+  padding: 11px 12px;
+  border: 1px solid #ccd8d3;
+  border-left: 4px solid #aabbb4;
+  border-radius: 11px;
+  background: white;
+}
+.trip-history-card.target-found { border-left-color: var(--gold); }
+.trip-history-card strong, .trip-history-card span { display: block; }
+.trip-history-card strong { font-size: .82rem; }
+.trip-history-card span { margin-top: 3px; color: #65736e; font-size: .68rem; line-height: 1.35; }
+
 .rain-card {
   margin: 16px 0;
   padding: 16px;
@@ -201,6 +289,9 @@
   .map-lens { margin-bottom: 12px; padding: 3px; }
   .map-lens button { min-height: 38px; padding: 5px 6px; font-size: .68rem; }
   .visit-heading { gap: 8px; }
+  .field-log-bar { grid-template-columns: 1fr; gap: 7px; margin: 10px 0; padding: 8px 9px; }
+  .field-log-actions { display: grid; grid-template-columns: 1.2fr .8fr; }
+  .field-log-actions button { min-height: 38px; }
   .rain-card { margin: 12px 0; padding: 12px; border-radius: 15px; }
   .rain-heading { gap: 8px; }
   .rain-heading h2 { font-size: 1.05rem; }

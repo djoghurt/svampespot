@@ -3,10 +3,10 @@ import {
 } from './weather.js';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, currentPotentialPresentation, mapModePresentation,
-} from './map-modes.js?v=2026-08-17-28';
+} from './map-modes.js?v=2026-08-17-29';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-28';
+} from './rank-display.js?v=2026-08-17-29';
 
 const element = (id) => document.getElementById(id);
 
@@ -57,10 +57,16 @@ export function createSpotMode({
   let overviewMode = false;
   let focusSelected = true;
   let mapMode = DEFAULT_MAP_MODE;
+  let selectedWeather = null;
   const weather = new Map();
 
   const currentSpot = () => spotPackage?.spots[index] || null;
   const currentCenter = () => active ? currentSpot()?.center || null : null;
+  const currentWeather = () => selectedWeather ? { ...selectedWeather } : null;
+  const currentPotential = () => {
+    const value = currentPotentialPresentation(currentSpot(), selectedWeather);
+    return value ? { ...value } : null;
+  };
 
   function navigationLinks(spot) {
     const destination = spot.center[1] + ',' + spot.center[0];
@@ -70,6 +76,7 @@ export function createSpotMode({
   }
 
   function showWeather(summary) {
+    selectedWeather = { ...summary };
     ui.rainLabel.textContent = summary.label;
     ui.rain7.textContent = summary.rain_7d_mm + ' mm';
     ui.rain30.textContent = summary.rain_30d_mm + ' mm';
@@ -130,6 +137,7 @@ export function createSpotMode({
 
   async function updateWeather(spot) {
     const request = ++weatherRequest;
+    selectedWeather = null;
     const weatherSpots = overviewMode ? overviewSpots : spotPackage.spots;
     const cacheKey = `${overviewMode ? 'overview' : spotPackage.region}:${spotPackage.generated_at}`;
     let gridRequest = weather.get(cacheKey);
@@ -177,6 +185,7 @@ export function createSpotMode({
     } catch {
       weather.delete(cacheKey);
       if (request === weatherRequest) {
+        selectedWeather = null;
         ui.rainLabel.textContent = 'Rain history unavailable';
         ui.moistureLegend.innerHTML = '<strong>Recent rain unavailable</strong><span>Habitat data still works</span>';
         fieldMap.clearWeatherRegion();
@@ -351,7 +360,7 @@ export function createSpotMode({
   });
 
   return {
-    activate, deactivate, currentCenter, selectSpot,
+    activate, deactivate, currentCenter, currentPotential, currentSpot, currentWeather, selectSpot,
     showOverview, showRegionDetail,
     setRegions,
   };

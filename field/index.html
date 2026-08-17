@@ -10,8 +10,8 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-180.png">
   <link rel="stylesheet" href="./vendor/leaflet.css">
-  <link rel="stylesheet" href="./styles.css?v=2026-08-17-28">
-  <link rel="stylesheet" href="./spot-styles.css?v=2026-08-17-28">
+  <link rel="stylesheet" href="./styles.css?v=2026-08-17-29">
+  <link rel="stylesheet" href="./spot-styles.css?v=2026-08-17-29">
 </head>
 <body>
   <header class="topbar">
@@ -85,6 +85,14 @@
           <span id="spotRank" class="status-chip">Habitat #1</span>
         </div>
 
+        <section id="fieldLogBar" class="field-log-bar" aria-live="polite">
+          <div><span>Field log</span><strong id="fieldLogStatus">Not visited yet</strong></div>
+          <div class="field-log-actions">
+            <button id="logSpotVisit" type="button">Log visit here</button>
+            <button id="openTripHistory" type="button">History · 0</button>
+          </div>
+        </section>
+
         <section class="rain-card" aria-live="polite">
           <div class="rain-heading">
             <div><p class="eyebrow">Local timing signal</p><h2 id="rainLabel">Checking recent rain…</h2></div>
@@ -148,6 +156,61 @@
 
   <input id="packageInput" type="file" accept=".json,application/json" hidden>
 
+  <dialog id="tripLogDialog">
+    <form id="tripLogForm">
+      <div class="dialog-heading">
+        <div><p class="eyebrow">Personal field log</p><h2>Log this visit</h2></div>
+        <button id="closeTripLog" class="icon-button" type="button" aria-label="Close">×</button>
+      </div>
+      <div id="tripLogContext" class="trip-log-context"></div>
+      <div class="trip-location-row">
+        <div><strong id="tripLocationStatus">Checking location…</strong><span>Location is saved only on this device until you export it.</span></div>
+        <button id="refreshTripLocation" type="button">Update</button>
+      </div>
+      <fieldset>
+        <legend>Did you find tragt-kantarel?</legend>
+        <div class="choice-row">
+          <label><input type="radio" name="tripDetected" value="yes" required><span>Yes</span></label>
+          <label><input type="radio" name="tripDetected" value="no"><span>No</span></label>
+        </div>
+      </fieldset>
+      <div class="field-grid">
+        <label>Fruiting clusters <input name="tripClusters" type="number" min="0" max="50" value="0"></label>
+        <label>Search duration <span class="input-unit"><input name="tripDuration" type="number" min="0" max="480" value="30" required><i>min</i></span></label>
+      </div>
+      <fieldset>
+        <legend>Other mushrooms seen</legend>
+        <div class="trip-species-grid">
+          <label class="check"><input type="checkbox" name="tripSpecies" value="Cantharellus cibarius">Kantarel</label>
+          <label class="check"><input type="checkbox" name="tripSpecies" value="Boletus edulis">Karl Johan</label>
+          <label class="check"><input type="checkbox" name="tripSpecies" value="Imleria badia">Brun rørhat</label>
+          <label class="check"><input type="checkbox" name="tripSpecies" value="Hydnum spp.">Pigsvamp</label>
+        </div>
+      </fieldset>
+      <label>Other mushroom names <input name="tripOtherSpecies" type="text" placeholder="Optional"></label>
+      <div class="field-grid">
+        <label>Dominant trees <select name="tripTree"><option value="">Not recorded</option><option>Spruce/fir</option><option>Pine</option><option>Beech</option><option>Oak</option><option>Mixed</option></select></label>
+        <label>Moss cover <select name="tripMoss"><option value="">Not recorded</option><option>Low</option><option>Medium</option><option>High</option></select></label>
+        <label>Ground wetness <select name="tripWetness"><option value="">Not recorded</option><option>Dry</option><option>Moist</option><option>Wet</option></select></label>
+        <label>Weather now <select name="tripFieldWeather"><option value="">Not recorded</option><option>Dry</option><option>Light rain</option><option>Rain</option></select></label>
+      </div>
+      <label>Notes <textarea name="tripNotes" rows="3"></textarea></label>
+      <label>Photo <input name="tripPhoto" type="file" accept="image/*" capture="environment"></label>
+      <p class="form-note">Exploratory trip log—not a blinded validation visit.</p>
+      <button class="primary-action" type="submit">Save visit</button>
+    </form>
+  </dialog>
+
+  <dialog id="tripHistoryDialog">
+    <div class="dialog-heading">
+      <div><p class="eyebrow">Saved on this device</p><h2>Visit history</h2></div>
+      <button id="closeTripHistory" class="icon-button" type="button" aria-label="Close">×</button>
+    </div>
+    <p id="tripHistorySummary" class="history-summary"></p>
+    <div id="tripHistoryList" class="trip-history-list"></div>
+    <button id="exportTripLogs" class="primary-action" type="button">Export visits and photos</button>
+  </dialog>
+
   <dialog id="resultDialog">
     <form id="resultForm">
       <div class="dialog-heading">
@@ -204,6 +267,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="./vendor/leaflet.js"></script>
-  <script type="module" src="./app.js?v=2026-08-17-28"></script>
+  <script type="module" src="./app.js?v=2026-08-17-29"></script>
 </body>
 </html>

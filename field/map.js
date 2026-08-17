@@ -1,7 +1,7 @@
 import {
   MAP_MODES, currentPotentialStyle, moistureOverlayStyle,
-} from './map-modes.js?v=2026-08-17-28';
-import { formatHabitatStanding, rankTierStyle } from './rank-display.js?v=2026-08-17-28';
+} from './map-modes.js?v=2026-08-17-29';
+import { formatHabitatStanding, rankTierStyle } from './rank-display.js?v=2026-08-17-29';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })
@@ -17,6 +17,9 @@ export function createFieldMap(element) {
   map.createPane('weatherPane');
   map.getPane('weatherPane').style.zIndex = 360;
   map.getPane('weatherPane').style.pointerEvents = 'none';
+  map.createPane('tripLogPane');
+  map.getPane('tripLogPane').style.zIndex = 440;
+  map.getPane('tripLogPane').style.pointerEvents = 'none';
 
   let visitLayer;
   let approachMarker;
@@ -28,6 +31,8 @@ export function createFieldMap(element) {
   let spotLayersById = new Map();
   let locationMarker;
   let weatherLayer;
+  let tripLogLayer;
+  let tripLogs = [];
   let viewChangeTimer;
   let displayMode = MAP_MODES.currentPotential;
   let currentPotentialById = new Map();
@@ -95,13 +100,49 @@ export function createFieldMap(element) {
     if (spotLayer) map.removeLayer(spotLayer);
     if (publicLandLayer) map.removeLayer(publicLandLayer);
     if (weatherLayer) map.removeLayer(weatherLayer);
+    if (tripLogLayer) map.removeLayer(tripLogLayer);
     spotLayer = null;
     spotSource = null;
     publicLandLayer = null;
     publicLandSource = null;
     weatherLayer = null;
+    tripLogLayer = null;
     selectedSpotId = null;
     spotLayersById = new Map();
+  }
+
+  function renderTripLogs() {
+    if (tripLogLayer) map.removeLayer(tripLogLayer);
+    tripLogLayer = L.layerGroup().addTo(map);
+    const visible = new Map();
+    tripLogs.forEach((log) => {
+      if (!spotLayersById.has(log.spot_id) || !Array.isArray(log.spot_center)) return;
+      const previous = visible.get(log.spot_id);
+      if (!previous || String(log.recorded_at) >= String(previous.recorded_at)) {
+        visible.set(log.spot_id, {
+          ...log,
+          target: {
+            ...log.target,
+            detected: Boolean(log.target?.detected || previous?.target?.detected),
+          },
+        });
+      } else if (log.target?.detected) {
+        previous.target.detected = true;
+      }
+    });
+    visible.forEach((log) => {
+      L.circleMarker([log.spot_center[1], log.spot_center[0]], {
+        pane: 'tripLogPane',
+        interactive: false,
+        radius: 6,
+        color: '#143c3a',
+        weight: 2,
+        opacity: 1,
+        fillColor: log.target?.detected ? '#f4c86a' : '#f5f7f4',
+        fillOpacity: log.target?.detected ? 1 : 0.76,
+      }).bindTooltip(log.target?.detected ? 'Visited · target found' : 'Visited · no target')
+        .addTo(tripLogLayer);
+    });
   }
 
   function showVisit(visit) {
@@ -205,6 +246,12 @@ export function createFieldMap(element) {
       const selectedLayer = spotLayersById.get(selectedId);
       map.fitBounds(selectedLayer.getBounds().pad(1.1), { animate: false, maxZoom: 15 });
     }
+    renderTripLogs();
+  }
+
+  function showTripLogs(values) {
+    tripLogs = Array.isArray(values) ? values : [];
+    renderTripLogs();
   }
 
   function setDisplayMode(mode) {
@@ -266,6 +313,6 @@ export function createFieldMap(element) {
 
   return {
     map, onViewChanged, showVisit, showSpots, showLocation,
-    clearWeatherRegion, setDisplayMode, showCurrentPotential, showWeatherGrid,
+    clearWeatherRegion, setDisplayMode, showCurrentPotential, showTripLogs, showWeatherGrid,
   };
 }
