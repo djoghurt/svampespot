@@ -51,16 +51,12 @@
       </div>
 
       <div id="spotState" hidden>
-        <div class="region-picker">
-          <label for="regionSelect">Jump to region</label>
-          <select id="regionSelect" aria-describedby="regionEvidence"></select>
-          <p id="regionEvidence">Development-only regional evidence</p>
-        </div>
         <div class="visit-heading">
           <div>
             <p id="spotProgress" class="eyebrow"></p>
             <h1 id="spotTitle">Silkeborg forest area</h1>
             <p id="spotEvidence" class="rank-evidence">Relative habitat rank within this region · not a probability</p>
+            <p id="regionEvidence" class="region-evidence">Development-only regional evidence</p>
           </div>
           <span id="spotRank" class="status-chip">Habitat #1</span>
         </div>
@@ -184,6 +180,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="./vendor/leaflet.js"></script>
-  <script type="module" src="./app.js?v=2026-08-17-10"></script>
+  <script type="module" src="./app.js?v=2026-08-17-11"></script>
 </body>
 </html>

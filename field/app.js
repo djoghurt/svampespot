@@ -14,9 +14,9 @@ import {
   loadRegionSpotPackage,
   nearestMapRegion,
   REGION_DETAIL_ZOOM,
-} from './default-spots.js?v=2026-08-17-10';
-import { createFieldMap } from './map.js?v=2026-08-17-10';
-import { createSpotMode } from './spot-mode.js?v=2026-08-17-10';
+} from './default-spots.js?v=2026-08-17-11';
+import { createFieldMap } from './map.js?v=2026-08-17-11';
+import { createSpotMode } from './spot-mode.js?v=2026-08-17-11';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
 
 const element = (id) => document.getElementById(id);
@@ -196,7 +196,6 @@ async function switchRegion(region, spotId = null, options = {}) {
     spotMode.showRegionDetail(spotId, fitRegion);
     return;
   }
-  spotMode.setRegionLoading(true);
   try {
     const [publishedPackage, publicLand] = await Promise.all([
       state.regionPackages.get(region) || loadRegionSpotPackage(region),
@@ -215,9 +214,6 @@ async function switchRegion(region, spotId = null, options = {}) {
     }
   } catch (error) {
     showToast(error.message);
-    spotMode.restoreRegionSelection();
-  } finally {
-    spotMode.setRegionLoading(false);
   }
 }
 
@@ -406,7 +402,7 @@ async function initialize() {
     render();
   }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=2026-08-17-10', {
+    navigator.serviceWorker.register('./sw.js?v=2026-08-17-11', {
       updateViaCache: 'none',
     }).then((registration) => registration.update()).catch(() => {});
   }

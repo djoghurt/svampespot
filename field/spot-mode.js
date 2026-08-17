@@ -13,8 +13,7 @@ export function createSpotMode({
     rain7: element('rain7'), rain30: element('rain30'), lastRain: element('lastRain'),
     apple: element('spotAppleMaps'), google: element('spotGoogleMaps'),
     previous: element('previousSpot'), next: element('nextSpot'), all: element('showAllSpots'),
-    change: element('changePackage'), region: element('regionSelect'),
-    regionEvidence: element('regionEvidence'),
+    change: element('changePackage'), regionEvidence: element('regionEvidence'),
   };
   let spotPackage = null;
   let index = 0;
@@ -100,7 +99,6 @@ export function createSpotMode({
         ? 'All areas in selected region · ranks within region'
       : 'Relative habitat rank within this region · not a probability';
     ui.regionEvidence.textContent = formatRegionEvidence(regionInfo?.evidence);
-    ui.region.value = spotPackage.region;
     const totalAreas = regions.reduce((sum, region) => sum + region.eligible_cells, 0);
     ui.all.textContent = overviewSpots?.length && overviewMode
       ? `Zoom into ${regionInfo?.name || 'selected region'}`
@@ -156,20 +154,6 @@ export function createSpotMode({
   function setRegions(values) {
     if (regions === values) return;
     regions = values;
-    ui.region.replaceChildren(...regions.map((region) => {
-      const option = document.createElement('option');
-      option.value = region.key;
-      option.textContent = `${region.name} · ${region.eligible_cells}`;
-      return option;
-    }));
-  }
-
-  function setRegionLoading(loading) {
-    ui.region.disabled = loading;
-  }
-
-  function restoreRegionSelection() {
-    if (spotPackage) ui.region.value = spotPackage.region;
   }
 
   function showRegionDetail(spotId = null, fitRegion = true) {
@@ -203,11 +187,10 @@ export function createSpotMode({
     render();
   });
   ui.change.addEventListener('click', () => packageInput.click());
-  ui.region.addEventListener('change', () => onRegionChanged(ui.region.value));
 
   return {
-    activate, deactivate, currentCenter, restoreRegionSelection, selectSpot,
+    activate, deactivate, currentCenter, selectSpot,
     showOverview, showRegionDetail,
-    setRegionLoading, setRegions,
+    setRegions,
   };
 }
