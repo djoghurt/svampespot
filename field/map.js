@@ -1,4 +1,4 @@
-import { rankTierStyle } from './rank-display.js';
+import { rankTierStyle } from './rank-display.js?v=2026-08-17-12';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })

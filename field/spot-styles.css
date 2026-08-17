@@ -23,12 +23,12 @@
   text-transform: uppercase;
 }
 .rank-legend span { display: flex; align-items: center; gap: 6px; font-size: .59rem; }
-.rank-swatch { width: 18px; height: 7px; border-radius: 2px; background: #35534f; }
-.rank-swatch.highest { background: #e6a23c; }
-.rank-swatch.high { background: #f4c86a; }
-.rank-swatch.medium { background: #7b9d6b; }
-.rank-swatch.low { background: #4f7568; }
-.rank-swatch.lowest { background: #35534f; }
+.rank-swatch { width: 18px; height: 7px; border-radius: 2px; background: #365f80; }
+.rank-swatch.highest { background: #e23d28; }
+.rank-swatch.high { background: #f29f31; }
+.rank-swatch.medium { background: #e9d758; }
+.rank-swatch.low { background: #3f9e94; }
+.rank-swatch.lowest { background: #365f80; }
 .public-boundary-key { margin-top: 3px; padding-top: 5px; border-top: 1px solid #54716c; }
 .public-boundary-key i {
   width: 18px;
