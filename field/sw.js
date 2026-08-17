@@ -1,13 +1,13 @@
-const CACHE = 'svampespot-field-v14';
+const CACHE = 'svampespot-field-v15';
 const SHELL = [
   './',
   './index.html',
-  './app.js?v=2026-08-17-9',
+  './app.js?v=2026-08-17-10',
   './core.js',
-  './default-spots.js?v=2026-08-17-9',
-  './map.js',
+  './default-spots.js?v=2026-08-17-10',
+  './map.js?v=2026-08-17-10',
   './rank-display.js',
-  './spot-mode.js?v=2026-08-17-9',
+  './spot-mode.js?v=2026-08-17-10',
   './storage.js',
   './styles.css',
   './spot-styles.css',

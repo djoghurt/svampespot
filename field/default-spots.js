@@ -1,6 +1,28 @@
 import { validateImportedPackage } from './core.js';
 
 export const REGION_MANIFEST_URL = './spots/regions.json';
+export const REGION_DETAIL_ZOOM = 10;
+
+function overviewCenter(region) {
+  const centers = region.overview_spots?.map(({ center }) => center)
+    .filter((center) => Array.isArray(center) && center.length === 2) || [];
+  if (!centers.length) return null;
+  return [
+    centers.reduce((sum, [longitude]) => sum + longitude, 0) / centers.length,
+    centers.reduce((sum, [, latitude]) => sum + latitude, 0) / centers.length,
+  ];
+}
+
+export function nearestMapRegion(regions, [longitude, latitude]) {
+  return regions.reduce((nearest, region) => {
+    const center = region.map_center || overviewCenter(region);
+    if (!center) return nearest;
+    const longitudeScale = Math.cos(latitude * Math.PI / 180);
+    const distance = ((center[0] - longitude) * longitudeScale) ** 2
+      + (center[1] - latitude) ** 2;
+    return !nearest || distance < nearest.distance ? { region, distance } : nearest;
+  }, null)?.region || null;
+}
 
 export async function loadRegionSpotPackage(region, fetchPackage = fetch) {
   if (!/^[a-z]+$/.test(String(region))) throw new Error('Invalid habitat region');

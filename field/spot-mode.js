@@ -4,7 +4,7 @@ import { formatRankSummary, formatRegionEvidence, rankTierLabel } from './rank-d
 const element = (id) => document.getElementById(id);
 
 export function createSpotMode({
-  fieldMap, packageInput, onSelectionChanged, onRegionChanged, showToast,
+  detailZoom, fieldMap, packageInput, onSelectionChanged, onRegionChanged, showToast,
 }) {
   const ui = {
     state: element('spotState'), mode: element('modeLabel'), progress: element('spotProgress'),
@@ -27,6 +27,7 @@ export function createSpotMode({
   let overviewSpots = null;
   let mapSpots = null;
   let overviewMode = false;
+  let focusSelected = true;
   const weather = new Map();
 
   const currentSpot = () => spotPackage?.spots[index] || null;
@@ -79,6 +80,7 @@ export function createSpotMode({
     }
     overviewMode = false;
     mapSpots = spotPackage.spots;
+    focusSelected = true;
     index = nextIndex;
     fitAll = false;
     render();
@@ -93,7 +95,7 @@ export function createSpotMode({
     ui.title.textContent = spot.forest_name || regionInfo?.name || 'Forest area';
     ui.rank.textContent = rankTierLabel(spot.rank_tier);
     ui.evidence.textContent = overviewSpots?.length && overviewMode
-      ? 'Representative markers across Denmark · choose a marker or region for every ranked area'
+      ? '12-region overview · zoom in to reveal every ranked area nearby'
       : overviewSpots?.length
         ? 'All areas in selected region · ranks within region'
       : 'Relative habitat rank within this region · not a probability';
@@ -101,9 +103,9 @@ export function createSpotMode({
     ui.region.value = spotPackage.region;
     const totalAreas = regions.reduce((sum, region) => sum + region.eligible_cells, 0);
     ui.all.textContent = overviewSpots?.length && overviewMode
-      ? `Show all ${total} areas in ${regionInfo?.name || 'selected region'}`
+      ? `Zoom into ${regionInfo?.name || 'selected region'}`
       : overviewSpots?.length
-        ? `Show ${regions.length}-region overview · ${totalAreas} areas`
+        ? `Show Denmark overview · ${totalAreas} areas`
       : `Show all ${total} areas`;
     ui.previous.disabled = index === 0;
     ui.next.disabled = index === spotPackage.spots.length - 1;
@@ -114,6 +116,8 @@ export function createSpotMode({
       selectSpot,
       fitAll,
       overviewMode ? null : publicLand,
+      focusSelected,
+      overviewMode ? null : detailZoom,
     );
     fitAll = false;
     updateWeather(spot);
@@ -168,12 +172,23 @@ export function createSpotMode({
     if (spotPackage) ui.region.value = spotPackage.region;
   }
 
-  function showRegionDetail(spotId = null) {
+  function showRegionDetail(spotId = null, fitRegion = true) {
+    if (!overviewMode && !spotId && !fitRegion) return;
     overviewMode = false;
     mapSpots = spotPackage.spots;
-    fitAll = !spotId;
+    fitAll = fitRegion && !spotId;
+    focusSelected = Boolean(spotId);
     render();
     if (spotId) selectSpot(spotId);
+  }
+
+  function showOverview(fitDenmark = false) {
+    if (overviewMode && !fitDenmark) return;
+    overviewMode = true;
+    mapSpots = overviewSpots;
+    fitAll = fitDenmark;
+    focusSelected = false;
+    render();
   }
 
   ui.previous.addEventListener('click', () => selectSpot(spotPackage.spots[index - 1].spot_id));
@@ -184,13 +199,15 @@ export function createSpotMode({
       mapSpots = overviewMode ? overviewSpots : spotPackage.spots;
     }
     fitAll = true;
+    focusSelected = false;
     render();
   });
   ui.change.addEventListener('click', () => packageInput.click());
   ui.region.addEventListener('change', () => onRegionChanged(ui.region.value));
 
   return {
-    activate, deactivate, currentCenter, restoreRegionSelection, selectSpot, showRegionDetail,
+    activate, deactivate, currentCenter, restoreRegionSelection, selectSpot,
+    showOverview, showRegionDetail,
     setRegionLoading, setRegions,
   };
 }

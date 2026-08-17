@@ -12,9 +12,11 @@ import {
   loadRegionManifest,
   loadRegionPublicLand,
   loadRegionSpotPackage,
-} from './default-spots.js?v=2026-08-17-9';
-import { createFieldMap } from './map.js';
-import { createSpotMode } from './spot-mode.js?v=2026-08-17-9';
+  nearestMapRegion,
+  REGION_DETAIL_ZOOM,
+} from './default-spots.js?v=2026-08-17-10';
+import { createFieldMap } from './map.js?v=2026-08-17-10';
+import { createSpotMode } from './spot-mode.js?v=2026-08-17-10';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
 
 const element = (id) => document.getElementById(id);
@@ -44,9 +46,13 @@ const state = {
   regionManifest: null,
   publicLand: null,
   overviewSpots: null,
+  regionPackages: new Map(),
+  publicLands: new Map(),
 };
+let regionRequest = 0;
 
 const spotMode = createSpotMode({
+  detailZoom: REGION_DETAIL_ZOOM,
   fieldMap,
   packageInput: ui.input,
   onSelectionChanged: () => updateInstrument(),
@@ -181,26 +187,51 @@ async function importPackage(file) {
     : parsed.visits.length + ' blinded visits imported.');
 }
 
-async function switchRegion(region, spotId = null) {
+async function switchRegion(region, spotId = null, options = {}) {
+  const { automatic = false, fitRegion = true } = options;
   const regionInfo = state.regionManifest?.regions.find(({ key }) => key === region);
-  if (!regionInfo || region === state.package?.region) return;
+  if (!regionInfo) return;
+  const request = ++regionRequest;
+  if (region === state.package?.region) {
+    spotMode.showRegionDetail(spotId, fitRegion);
+    return;
+  }
   spotMode.setRegionLoading(true);
   try {
     const [publishedPackage, publicLand] = await Promise.all([
-      loadRegionSpotPackage(region),
-      loadRegionPublicLand(region),
+      state.regionPackages.get(region) || loadRegionSpotPackage(region),
+      state.publicLands.get(region) || loadRegionPublicLand(region),
     ]);
+    if (request !== regionRequest) return;
+    state.regionPackages.set(region, publishedPackage);
+    state.publicLands.set(region, publicLand);
     state.package = publishedPackage;
     state.publicLand = publicLand;
     await saveState('package', publishedPackage);
     render();
-    spotMode.showRegionDetail(spotId);
-    showToast(`${regionInfo.name} loaded · ${regionInfo.eligible_cells} ranked areas.`);
+    spotMode.showRegionDetail(spotId, fitRegion);
+    if (!automatic) {
+      showToast(`${regionInfo.name} loaded · ${regionInfo.eligible_cells} ranked areas.`);
+    }
   } catch (error) {
     showToast(error.message);
     spotMode.restoreRegionSelection();
   } finally {
     spotMode.setRegionLoading(false);
+  }
+}
+
+async function updateMapDetail({ zoom, center }) {
+  if (state.package?.package_type !== 'ranked_spots'
+    || !state.regionManifest?.regions.length) return;
+  if (zoom < REGION_DETAIL_ZOOM) {
+    regionRequest++;
+    spotMode.showOverview(false);
+    return;
+  }
+  const region = nearestMapRegion(state.regionManifest.regions, center);
+  if (region) {
+    await switchRegion(region.key, null, { automatic: true, fitRegion: false });
   }
 }
 
@@ -350,6 +381,8 @@ async function initialize() {
     // Keep the stored package or import screen when the public package is unavailable.
   }
   state.package = chooseInitialPackage(storedPackage, publishedPackage);
+  if (publishedPackage) state.regionPackages.set(preferredRegion, publishedPackage);
+  if (state.publicLand) state.publicLands.set(preferredRegion, state.publicLand);
   if (state.package && state.package !== storedPackage) {
     await saveState('package', state.package);
   }
@@ -373,11 +406,17 @@ async function initialize() {
     render();
   }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=2026-08-17-9', {
+    navigator.serviceWorker.register('./sw.js?v=2026-08-17-10', {
       updateViaCache: 'none',
     }).then((registration) => registration.update()).catch(() => {});
   }
 }
+
+fieldMap.onViewChanged((view) => {
+  updateMapDetail(view).catch(() => {
+    showToast('Could not load nearby map detail. The Denmark overview still works.');
+  });
+});
 
 ui.importButton.addEventListener('click', () => ui.input.click());
 ui.input.addEventListener('change', () => ui.input.files[0] && importPackage(ui.input.files[0])

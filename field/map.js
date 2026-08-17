@@ -21,6 +21,7 @@ export function createFieldMap(element) {
   let selectedSpotId;
   let spotLayersById = new Map();
   let locationMarker;
+  let viewChangeTimer;
   const spotRenderer = L.canvas({ padding: 0.5 });
 
   function clearVisitTargets() {
@@ -71,7 +72,15 @@ export function createFieldMap(element) {
     map.fitBounds(bounds.pad(0.35), { animate: false });
   }
 
-  function showSpots(spots, selectedId, onSelect, fitAll = false, publicLand = null) {
+  function showSpots(
+    spots,
+    selectedId,
+    onSelect,
+    fitAll = false,
+    publicLand = null,
+    focusSelected = true,
+    minimumZoom = null,
+  ) {
     clearVisitTargets();
     const styleFor = (properties, selected) => {
       const tier = rankTierStyle(properties.rank_tier);
@@ -147,10 +156,26 @@ export function createFieldMap(element) {
     const selected = spots.find(({ spot_id: id }) => id === selectedId);
     if (fitAll) {
       map.fitBounds(spotLayer.getBounds().pad(0.08), { animate: false });
-    } else if (selected) {
+      if (minimumZoom && map.getZoom() < minimumZoom) {
+        map.setZoom(minimumZoom, { animate: false });
+      }
+    } else if (selected && focusSelected) {
       const selectedLayer = spotLayersById.get(selectedId);
       map.fitBounds(selectedLayer.getBounds().pad(1.1), { animate: false, maxZoom: 15 });
     }
+  }
+
+  function onViewChanged(callback) {
+    map.on('moveend', () => {
+      clearTimeout(viewChangeTimer);
+      viewChangeTimer = setTimeout(() => {
+        const center = map.getCenter();
+        callback({
+          zoom: map.getZoom(),
+          center: [center.lng, center.lat],
+        });
+      }, 160);
+    });
   }
 
   function showLocation(coords, accuracy) {
@@ -169,5 +194,5 @@ export function createFieldMap(element) {
     locationMarker.setRadius(Math.max(7, Math.min(18, Number(accuracy) / 8 || 8)));
   }
 
-  return { map, showVisit, showSpots, showLocation };
+  return { map, onViewChanged, showVisit, showSpots, showLocation };
 }
