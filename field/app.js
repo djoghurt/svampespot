@@ -13,11 +13,23 @@ import {
   loadRegionPublicLand,
   loadRegionSpotOverview,
   loadRegionSpotPackage,
-} from './default-spots.js?v=2026-08-17-4';
+} from './default-spots.js?v=2026-08-17-7';
 import { createFieldMap } from './map.js';
-import { createSpotMode } from './spot-mode.js?v=2026-08-17-4';
+import { createSpotMode } from './spot-mode.js?v=2026-08-17-7';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
 
+const OVERVIEW_SPOTS_PER_REGION = 3;
+const OVERVIEW_MARKER_RADIUS = 0.015;
+const overviewMarkerGeometry = ([longitude, latitude]) => ({
+  type: 'Polygon',
+  coordinates: [[
+    [longitude - OVERVIEW_MARKER_RADIUS, latitude - OVERVIEW_MARKER_RADIUS],
+    [longitude + OVERVIEW_MARKER_RADIUS, latitude - OVERVIEW_MARKER_RADIUS],
+    [longitude + OVERVIEW_MARKER_RADIUS, latitude + OVERVIEW_MARKER_RADIUS],
+    [longitude - OVERVIEW_MARKER_RADIUS, latitude + OVERVIEW_MARKER_RADIUS],
+    [longitude - OVERVIEW_MARKER_RADIUS, latitude - OVERVIEW_MARKER_RADIUS],
+  ]],
+});
 const element = (id) => document.getElementById(id);
 const ui = {
   empty: element('emptyState'), visit: element('visitState'), input: element('packageInput'),
@@ -55,7 +67,7 @@ const spotMode = createSpotMode({
   showToast,
 });
 
-const currentVisit = () => state.package?.visits[state.index] || null;
+const currentVisit = () => state.package?.visits?.[state.index] || null;
 const completedIds = () => new Set(state.results.map((result) => result.visit_id));
 function showToast(message) {
   ui.toast.textContent = message;
@@ -207,11 +219,17 @@ async function switchRegion(region, spotId = null) {
 
 async function loadDenmarkOverview() {
   if (!state.regionManifest?.regions.length) return;
-  state.overviewSpots = await loadRegionSpotOverview(state.regionManifest.regions);
+  const allSpots = await loadRegionSpotOverview(state.regionManifest.regions);
+  state.overviewSpots = allSpots
+    .filter((spot) => spot.rank <= OVERVIEW_SPOTS_PER_REGION)
+    .map((spot) => ({ ...spot, geometry: overviewMarkerGeometry(spot.center) }));
+  const totalAreas = state.regionManifest.regions.reduce(
+    (sum, region) => sum + region.eligible_cells,
+    0,
+  );
   render();
   showToast(
-    `${state.regionManifest.regions.length} regions visible · `
-    + `${state.overviewSpots.length} ranked areas.`,
+    `${state.regionManifest.regions.length} regions ready · ${totalAreas} total areas.`,
   );
 }
 async function startVisit() {
@@ -366,7 +384,7 @@ async function initialize() {
     });
   }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=2026-08-17-4', {
+    navigator.serviceWorker.register('./sw.js?v=2026-08-17-7', {
       updateViaCache: 'none',
     }).then((registration) => registration.update()).catch(() => {});
   }
