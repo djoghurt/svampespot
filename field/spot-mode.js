@@ -1,7 +1,10 @@
 import { fetchRainHistory } from './weather.js';
 import {
+  DEFAULT_MAP_MODE, MAP_MODES, mapModePresentation,
+} from './map-modes.js?v=2026-08-17-14';
+import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-13';
+} from './rank-display.js?v=2026-08-17-14';
 
 const element = (id) => document.getElementById(id);
 
@@ -16,6 +19,11 @@ export function createSpotMode({
     apple: element('spotAppleMaps'), google: element('spotGoogleMaps'),
     previous: element('previousSpot'), next: element('nextSpot'), all: element('showAllSpots'),
     change: element('changePackage'), regionEvidence: element('regionEvidence'),
+    modeButtons: [...document.querySelectorAll('[data-map-mode]')],
+    notice: element('mapModeNotice'), noticeTitle: element('mapModeNoticeTitle'),
+    noticeBody: element('mapModeNoticeBody'), rainCard: document.querySelector('.rain-card'),
+    destinations: document.querySelector('#spotState .destination-actions'),
+    bestNowBadge: element('bestNowMapBadge'), moistureLegend: element('moistureLegend'),
   };
   let spotPackage = null;
   let index = 0;
@@ -29,6 +37,7 @@ export function createSpotMode({
   let mapSpots = null;
   let overviewMode = false;
   let focusSelected = true;
+  let mapMode = DEFAULT_MAP_MODE;
   const weather = new Map();
 
   const currentSpot = () => spotPackage?.spots[index] || null;
@@ -48,6 +57,8 @@ export function createSpotMode({
     ui.lastRain.textContent = summary.days_since_5mm_rain == null
       ? 'None in 30 days'
       : summary.days_since_5mm_rain + ' days ago';
+    ui.moistureLegend.innerHTML = `<strong>${summary.label}</strong><span>Coarse 0.1° weather area</span>`;
+    fieldMap.showWeatherRegion(currentSpot().center, summary);
   }
 
   async function updateWeather(spot) {
@@ -65,9 +76,37 @@ export function createSpotMode({
     } catch {
       if (request === weatherRequest) {
         ui.rainLabel.textContent = 'Rain history unavailable';
+        ui.moistureLegend.innerHTML = '<strong>Recent rain unavailable</strong><span>Habitat data still works</span>';
+        fieldMap.clearWeatherRegion();
         showToast('Could not load local rain history. Habitat spots still work.');
       }
     }
+  }
+
+  function renderMapMode() {
+    const presentation = mapModePresentation(mapMode);
+    document.body.dataset.mapMode = mapMode;
+    ui.state.dataset.mapMode = mapMode;
+    ui.mode.textContent = presentation.modeLabel;
+    ui.notice.hidden = !presentation.showNotice;
+    ui.noticeTitle.textContent = presentation.noticeTitle;
+    ui.noticeBody.textContent = presentation.noticeBody;
+    ui.rainCard.hidden = !presentation.showRain;
+    ui.destinations.hidden = !presentation.allowNavigation;
+    ui.bestNowBadge.hidden = mapMode !== MAP_MODES.bestNow;
+    ui.moistureLegend.hidden = mapMode !== MAP_MODES.recentMoisture;
+    ui.modeButtons.forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.mapMode === mapMode));
+    });
+    fieldMap.setDisplayMode(mapMode);
+  }
+
+  function setMapMode(nextMode) {
+    mapModePresentation(nextMode);
+    mapMode = nextMode;
+    renderMapMode();
+    fieldMap.clearWeatherRegion();
+    if (mapMode === MAP_MODES.recentMoisture && currentSpot()) updateWeather(currentSpot());
   }
 
   function selectSpot(spotId) {
@@ -120,7 +159,9 @@ export function createSpotMode({
       overviewMode ? null : detailZoom,
     );
     fitAll = false;
-    updateWeather(spot);
+    renderMapMode();
+    fieldMap.clearWeatherRegion();
+    if (mapMode === MAP_MODES.recentMoisture) updateWeather(spot);
   }
 
   function activate(value, context = {}) {
@@ -143,7 +184,6 @@ export function createSpotMode({
       mapSpots = overviewMode ? overviewSpots : value.spots;
     }
     ui.state.hidden = false;
-    ui.mode.textContent = 'Habitat scout';
     render();
   }
 
@@ -189,6 +229,9 @@ export function createSpotMode({
     render();
   });
   ui.change.addEventListener('click', () => packageInput.click());
+  ui.modeButtons.forEach((button) => {
+    button.addEventListener('click', () => setMapMode(button.dataset.mapMode));
+  });
 
   return {
     activate, deactivate, currentCenter, selectSpot,

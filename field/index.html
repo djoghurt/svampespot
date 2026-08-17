@@ -17,7 +17,7 @@
   <header class="topbar">
     <div>
       <span class="wordmark">Svampespot</span>
-      <span id="modeLabel" class="mode">Habitat scout</span>
+      <span id="modeLabel" class="mode">Best now</span>
     </div>
     <span class="experimental">Experimental</span>
   </header>
@@ -34,6 +34,10 @@
         <span><i class="rank-swatch lowest"></i>71–100%</span>
         <span class="public-boundary-key"><i></i>Naturstyrelsen land</span>
       </aside>
+      <div id="bestNowMapBadge" class="map-mode-badge" hidden>Best now unavailable</div>
+      <div id="moistureLegend" class="moisture-legend" hidden>
+        <strong>Recent rain</strong><span>Coarse 0.1° weather area</span>
+      </div>
       <div class="aperture" aria-live="polite">
         <span id="bearing" class="bearing">—</span>
         <span id="distance" class="distance">Location off</span>
@@ -51,6 +55,18 @@
       </div>
 
       <div id="spotState" hidden>
+        <nav class="map-lens" aria-label="Choose map view">
+          <button type="button" data-map-mode="best-now" aria-pressed="true">Best now</button>
+          <button type="button" data-map-mode="habitat" aria-pressed="false">Habitat</button>
+          <button type="button" data-map-mode="recent-moisture" aria-pressed="false">Recent moisture</button>
+        </nav>
+
+        <section id="mapModeNotice" class="map-mode-notice" aria-live="polite">
+          <p class="eyebrow">Current recommendation</p>
+          <h2 id="mapModeNoticeTitle">Best now unavailable</h2>
+          <p id="mapModeNoticeBody">The regional timing model has not passed its frozen evaluation yet. Habitat remains available.</p>
+        </section>
+
         <div class="visit-heading">
           <div>
             <p id="spotProgress" class="eyebrow"></p>
@@ -180,6 +196,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="./vendor/leaflet.js"></script>
-  <script type="module" src="./app.js?v=2026-08-17-13"></script>
+  <script type="module" src="./app.js?v=2026-08-17-14"></script>
 </body>
 </html>

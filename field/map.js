@@ -1,4 +1,6 @@
-import { rankTierStyle } from './rank-display.js?v=2026-08-17-13';
+import { MAP_MODES, moistureOverlayStyle } from './map-modes.js?v=2026-08-17-14';
+import { rankTierStyle } from './rank-display.js?v=2026-08-17-14';
+import { coarsenWeatherCenter } from './weather.js';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })
@@ -21,7 +23,9 @@ export function createFieldMap(element) {
   let selectedSpotId;
   let spotLayersById = new Map();
   let locationMarker;
+  let weatherLayer;
   let viewChangeTimer;
+  let displayMode = MAP_MODES.bestNow;
   const spotRenderer = L.canvas({ padding: 0.5 });
 
   function clearVisitTargets() {
@@ -35,10 +39,12 @@ export function createFieldMap(element) {
     clearVisitTargets();
     if (spotLayer) map.removeLayer(spotLayer);
     if (publicLandLayer) map.removeLayer(publicLandLayer);
+    if (weatherLayer) map.removeLayer(weatherLayer);
     spotLayer = null;
     spotSource = null;
     publicLandLayer = null;
     publicLandSource = null;
+    weatherLayer = null;
     selectedSpotId = null;
     spotLayersById = new Map();
   }
@@ -84,18 +90,19 @@ export function createFieldMap(element) {
     clearVisitTargets();
     const styleFor = (properties, selected) => {
       const tier = rankTierStyle(properties.rank_tier);
+      const muted = displayMode !== MAP_MODES.habitat;
       return selected ? {
-        color: '#fff0b5',
-        weight: 4,
+        color: muted ? '#e7ece8' : '#fff0b5',
+        weight: muted ? 2 : 4,
         opacity: 1,
         fillColor: tier.fillColor,
-        fillOpacity: Math.min(0.90, tier.fillOpacity + 0.16),
+        fillOpacity: muted ? 0.16 : Math.min(0.90, tier.fillOpacity + 0.16),
       } : {
-        color: '#294f49',
+        color: muted ? '#526a65' : '#294f49',
         weight: 0.8,
-        opacity: 0.72,
+        opacity: muted ? 0.35 : 0.72,
         fillColor: tier.fillColor,
-        fillOpacity: tier.fillOpacity,
+        fillOpacity: muted ? 0.08 : tier.fillOpacity,
       };
     };
     if (spotSource !== spots) {
@@ -165,6 +172,40 @@ export function createFieldMap(element) {
     }
   }
 
+  function setDisplayMode(mode) {
+    displayMode = mode;
+    if (!spotLayer) return;
+    spotLayer.eachLayer((layer) => {
+      const selected = layer.feature.properties.spot_id === selectedSpotId;
+      const tier = rankTierStyle(layer.feature.properties.rank_tier);
+      const muted = mode !== MAP_MODES.habitat;
+      layer.setStyle(selected ? {
+        color: muted ? '#e7ece8' : '#fff0b5', weight: muted ? 2 : 4, opacity: 1,
+        fillColor: tier.fillColor,
+        fillOpacity: muted ? 0.16 : Math.min(0.90, tier.fillOpacity + 0.16),
+      } : {
+        color: muted ? '#526a65' : '#294f49', weight: 0.8,
+        opacity: muted ? 0.35 : 0.72, fillColor: tier.fillColor,
+        fillOpacity: muted ? 0.08 : tier.fillOpacity,
+      });
+    });
+  }
+
+  function clearWeatherRegion() {
+    if (weatherLayer) map.removeLayer(weatherLayer);
+    weatherLayer = null;
+  }
+
+  function showWeatherRegion(center, summary) {
+    clearWeatherRegion();
+    const [longitude, latitude] = coarsenWeatherCenter(center);
+    weatherLayer = L.rectangle([
+      [latitude - 0.05, longitude - 0.05],
+      [latitude + 0.05, longitude + 0.05],
+    ], moistureOverlayStyle(summary.label)).addTo(map);
+    weatherLayer.bringToBack();
+  }
+
   function onViewChanged(callback) {
     map.on('moveend', () => {
       clearTimeout(viewChangeTimer);
@@ -194,5 +235,8 @@ export function createFieldMap(element) {
     locationMarker.setRadius(Math.max(7, Math.min(18, Number(accuracy) / 8 || 8)));
   }
 
-  return { map, onViewChanged, showVisit, showSpots, showLocation };
+  return {
+    map, onViewChanged, showVisit, showSpots, showLocation,
+    clearWeatherRegion, setDisplayMode, showWeatherRegion,
+  };
 }

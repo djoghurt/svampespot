@@ -16,6 +16,7 @@ const allowed = new Set([
   "field/icon.svg",
   "field/index.html",
   "field/manifest.webmanifest",
+  "field/map-modes.js",
   "field/map.js",
   "field/public-land/bornholm.json",
   "field/public-land/eastjylland.json",
