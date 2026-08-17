@@ -25,8 +25,8 @@ const PRESENTATIONS = Object.freeze({
   }),
   [MAP_MODES.recentMoisture]: Object.freeze({
     modeLabel: 'Recent moisture',
-    noticeTitle: 'Coarse recent rain',
-    noticeBody: 'This broad weather area is separate from the 250 m habitat ranking.',
+    noticeTitle: 'Recent modelled rain',
+    noticeBody: 'DMI rain history is sampled at roughly 2 km. It remains separate from the 250 m habitat ranking.',
     showNotice: true,
     showRain: true,
     allowNavigation: false,

@@ -1,6 +1,5 @@
-import { MAP_MODES, moistureOverlayStyle } from './map-modes.js?v=2026-08-17-14';
-import { rankTierStyle } from './rank-display.js?v=2026-08-17-14';
-import { coarsenWeatherCenter } from './weather.js';
+import { MAP_MODES, moistureOverlayStyle } from './map-modes.js?v=2026-08-17-15';
+import { rankTierStyle } from './rank-display.js?v=2026-08-17-15';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })
@@ -13,6 +12,9 @@ export function createFieldMap(element) {
   map.createPane('publicBoundaryPane');
   map.getPane('publicBoundaryPane').style.zIndex = 430;
   map.getPane('publicBoundaryPane').style.pointerEvents = 'none';
+  map.createPane('weatherPane');
+  map.getPane('weatherPane').style.zIndex = 360;
+  map.getPane('weatherPane').style.pointerEvents = 'none';
 
   let visitLayer;
   let approachMarker;
@@ -196,14 +198,15 @@ export function createFieldMap(element) {
     weatherLayer = null;
   }
 
-  function showWeatherRegion(center, summary) {
+  function showWeatherGrid(samples) {
     clearWeatherRegion();
-    const [longitude, latitude] = coarsenWeatherCenter(center);
-    weatherLayer = L.rectangle([
-      [latitude - 0.05, longitude - 0.05],
-      [latitude + 0.05, longitude + 0.05],
-    ], moistureOverlayStyle(summary.label)).addTo(map);
-    weatherLayer.bringToBack();
+    weatherLayer = L.layerGroup().addTo(map);
+    samples.forEach((sample) => {
+      L.rectangle(sample.bounds, {
+        ...moistureOverlayStyle(sample.label),
+        pane: 'weatherPane',
+      }).addTo(weatherLayer);
+    });
   }
 
   function onViewChanged(callback) {
@@ -237,6 +240,6 @@ export function createFieldMap(element) {
 
   return {
     map, onViewChanged, showVisit, showSpots, showLocation,
-    clearWeatherRegion, setDisplayMode, showWeatherRegion,
+    clearWeatherRegion, setDisplayMode, showWeatherGrid,
   };
 }

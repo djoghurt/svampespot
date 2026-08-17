@@ -1,10 +1,12 @@
-import { fetchRainHistory } from './weather.js';
+import {
+  fetchRainGrid, nearestWeatherSample, weatherGridPoints,
+} from './weather.js';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, mapModePresentation,
-} from './map-modes.js?v=2026-08-17-14';
+} from './map-modes.js?v=2026-08-17-15';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-14';
+} from './rank-display.js?v=2026-08-17-15';
 
 const element = (id) => document.getElementById(id);
 
@@ -57,23 +59,33 @@ export function createSpotMode({
     ui.lastRain.textContent = summary.days_since_5mm_rain == null
       ? 'None in 30 days'
       : summary.days_since_5mm_rain + ' days ago';
-    ui.moistureLegend.innerHTML = `<strong>${summary.label}</strong><span>Coarse 0.1° weather area</span>`;
-    fieldMap.showWeatherRegion(currentSpot().center, summary);
   }
 
   async function updateWeather(spot) {
     const request = ++weatherRequest;
-    ui.rainLabel.textContent = 'Checking recent rain…';
+    const cacheKey = `${spotPackage.region}:${spotPackage.generated_at}`;
+    ui.rainLabel.textContent = 'Checking DMI rain history…';
     ui.rain7.textContent = '—';
     ui.rain30.textContent = '—';
     ui.lastRain.textContent = '—';
     try {
-      const summary = weather.get(spot.spot_id) || await fetchRainHistory(spot.center);
-      weather.set(spot.spot_id, summary);
-      if (request === weatherRequest && currentSpot()?.spot_id === spot.spot_id) {
+      let samples = weather.get(cacheKey);
+      if (!samples) {
+        samples = fetchRainGrid(weatherGridPoints(spotPackage.spots));
+        weather.set(cacheKey, samples);
+      }
+      samples = await samples;
+      weather.set(cacheKey, samples);
+      if (request === weatherRequest && mapMode === MAP_MODES.recentMoisture
+        && currentSpot()?.spot_id === spot.spot_id) {
+        const summary = nearestWeatherSample(samples, spot.center);
+        if (!summary) throw new Error('No regional weather samples');
         showWeather(summary);
+        fieldMap.showWeatherGrid(samples);
+        ui.moistureLegend.innerHTML = `<strong>${summary.label}</strong><span>${samples.length} DMI model samples · roughly 2 km</span>`;
       }
     } catch {
+      weather.delete(cacheKey);
       if (request === weatherRequest) {
         ui.rainLabel.textContent = 'Rain history unavailable';
         ui.moistureLegend.innerHTML = '<strong>Recent rain unavailable</strong><span>Habitat data still works</span>';
@@ -104,6 +116,7 @@ export function createSpotMode({
   function setMapMode(nextMode) {
     mapModePresentation(nextMode);
     mapMode = nextMode;
+    weatherRequest += 1;
     renderMapMode();
     fieldMap.clearWeatherRegion();
     if (mapMode === MAP_MODES.recentMoisture && currentSpot()) updateWeather(currentSpot());

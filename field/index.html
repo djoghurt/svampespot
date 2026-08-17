@@ -36,7 +36,7 @@
       </aside>
       <div id="bestNowMapBadge" class="map-mode-badge" hidden>Best now unavailable</div>
       <div id="moistureLegend" class="moisture-legend" hidden>
-        <strong>Recent rain</strong><span>Coarse 0.1° weather area</span>
+        <strong>Recent rain</strong><span>DMI · roughly 2 km samples</span>
       </div>
       <div class="aperture" aria-live="polite">
         <span id="bearing" class="bearing">—</span>
@@ -80,14 +80,14 @@
         <section class="rain-card" aria-live="polite">
           <div class="rain-heading">
             <div><p class="eyebrow">Local timing signal</p><h2 id="rainLabel">Checking recent rain…</h2></div>
-            <span class="live-chip">Live</span>
+            <span class="live-chip">DMI model</span>
           </div>
           <div class="rain-stats">
             <div><strong id="rain7">—</strong><span>rain · 7 days</span></div>
             <div><strong id="rain30">—</strong><span>rain · 30 days</span></div>
             <div><strong id="lastRain">—</strong><span>last ≥5 mm day</span></div>
           </div>
-          <p>This is a coarse 6–11 km rain-history heuristic, not a mushroom guarantee. Exact spot coordinates are not sent to the weather provider.</p>
+          <p>DMI HARMONIE rain history sampled at roughly 2 km. This is modelled rainfall, not a gauge or radar measurement, and not a mushroom guarantee.</p>
         </section>
 
         <div class="destination-actions">
@@ -196,6 +196,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="./vendor/leaflet.js"></script>
-  <script type="module" src="./app.js?v=2026-08-17-14"></script>
+  <script type="module" src="./app.js?v=2026-08-17-15"></script>
 </body>
 </html>
