@@ -3,20 +3,20 @@ import {
 } from './weather.js';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, currentPotentialPresentation, mapModePresentation,
-} from './map-modes.js?v=2026-08-17-21';
+} from './map-modes.js?v=2026-08-17-22';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-17-21';
+} from './rank-display.js?v=2026-08-17-22';
 
 const element = (id) => document.getElementById(id);
 
 export async function firstRainResult(selectedRequest, gridRequest, center) {
   return Promise.any([
-    selectedRequest.then((summary) => {
+    Promise.resolve(selectedRequest).then((summary) => {
       if (!summary) throw new Error('Selected weather is unavailable');
       return { summary, samples: null };
     }),
-    gridRequest.then((samples) => {
+    Promise.resolve(gridRequest).then((samples) => {
       const summary = nearestWeatherSample(samples, center);
       if (!summary) throw new Error('Regional weather is unavailable');
       return { summary, samples };
@@ -113,24 +113,41 @@ export function createSpotMode({
     return potential;
   }
 
+  function showRegionalWeather(spot, weatherSpots, samples) {
+    const summary = nearestWeatherSample(samples, spot.center);
+    if (!summary) throw new Error('No regional weather samples');
+    showWeather(summary);
+    if (mapMode === MAP_MODES.currentPotential) {
+      const scoredSpots = weatherSpots.some(({ spot_id: spotId }) => spotId === spot.spot_id)
+        ? weatherSpots : [...weatherSpots, spot];
+      fieldMap.showCurrentPotential(potentialValues(scoredSpots, samples));
+      showCurrentPotential(spot, summary);
+    } else {
+      fieldMap.showWeatherGrid(samples);
+      ui.moistureLegend.innerHTML = `<strong>${summary.label}</strong><span>${samples.length} DMI model samples · roughly 2 km</span>`;
+    }
+  }
+
   async function updateWeather(spot) {
     const request = ++weatherRequest;
     const weatherSpots = overviewMode ? overviewSpots : spotPackage.spots;
     const cacheKey = `${overviewMode ? 'overview' : spotPackage.region}:${spotPackage.generated_at}`;
+    let gridRequest = weather.get(cacheKey);
+    const cachedSamples = Array.isArray(gridRequest) ? gridRequest : null;
+    if (cachedSamples) {
+      showRegionalWeather(spot, weatherSpots, cachedSamples);
+      return;
+    }
     ui.rainLabel.textContent = 'Checking DMI rain history…';
     ui.rain7.textContent = '—';
     ui.rain30.textContent = '—';
     ui.lastRain.textContent = '—';
     try {
-      let gridRequest = weather.get(cacheKey);
-      const cachedSamples = Array.isArray(gridRequest) ? gridRequest : null;
       if (!gridRequest) {
         gridRequest = fetchRainGrid(weatherGridPoints(weatherSpots));
         weather.set(cacheKey, gridRequest);
       }
-      const selectedRequest = cachedSamples
-        ? Promise.resolve(nearestWeatherSample(cachedSamples, spot.center))
-        : fetchRainHistory(spot.center);
+      const selectedRequest = fetchRainHistory(spot.center);
       const first = await firstRainResult(selectedRequest, gridRequest, spot.center);
       const isCurrent = () => request === weatherRequest
         && [MAP_MODES.currentPotential, MAP_MODES.recentMoisture].includes(mapMode)
@@ -156,18 +173,7 @@ export function createSpotMode({
       }
       weather.set(cacheKey, samples);
       if (!isCurrent()) return;
-      const summary = nearestWeatherSample(samples, spot.center);
-      if (!summary) throw new Error('No regional weather samples');
-      showWeather(summary);
-      if (mapMode === MAP_MODES.currentPotential) {
-        const scoredSpots = weatherSpots.some(({ spot_id: spotId }) => spotId === spot.spot_id)
-          ? weatherSpots : [...weatherSpots, spot];
-        fieldMap.showCurrentPotential(potentialValues(scoredSpots, samples));
-        showCurrentPotential(spot, summary);
-      } else {
-        fieldMap.showWeatherGrid(samples);
-        ui.moistureLegend.innerHTML = `<strong>${summary.label}</strong><span>${samples.length} DMI model samples · roughly 2 km</span>`;
-      }
+      showRegionalWeather(spot, weatherSpots, samples);
     } catch {
       weather.delete(cacheKey);
       if (request === weatherRequest) {
@@ -220,7 +226,6 @@ export function createSpotMode({
     weatherRequest += 1;
     renderMapMode();
     fieldMap.clearWeatherRegion();
-    fieldMap.showCurrentPotential([]);
     if ([MAP_MODES.currentPotential, MAP_MODES.recentMoisture].includes(mapMode)
       && currentSpot()) updateWeather(currentSpot());
   }
@@ -272,7 +277,6 @@ export function createSpotMode({
     fitAll = false;
     renderMapMode();
     fieldMap.clearWeatherRegion();
-    fieldMap.showCurrentPotential([]);
     if ([MAP_MODES.currentPotential, MAP_MODES.recentMoisture].includes(mapMode)) {
       updateWeather(spot);
     }

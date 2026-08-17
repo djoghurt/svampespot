@@ -14,9 +14,9 @@ import {
   loadRegionSpotPackage,
   nearestMapRegion,
   REGION_DETAIL_ZOOM,
-} from './default-spots.js?v=2026-08-17-21';
-import { createFieldMap } from './map.js?v=2026-08-17-21';
-import { createSpotMode } from './spot-mode.js?v=2026-08-17-21';
+} from './default-spots.js?v=2026-08-17-22';
+import { createFieldMap } from './map.js?v=2026-08-17-22';
+import { createSpotMode } from './spot-mode.js?v=2026-08-17-22';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
 
 const element = (id) => document.getElementById(id);
@@ -402,7 +402,7 @@ async function initialize() {
     render();
   }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=2026-08-17-21', {
+    navigator.serviceWorker.register('./sw.js?v=2026-08-17-22', {
       updateViaCache: 'none',
     }).then((registration) => registration.update()).catch(() => {});
   }
