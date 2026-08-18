@@ -1,17 +1,20 @@
 import {
   fetchRainGrid, fetchRainHistory, nearestWeatherSample, weatherGridPoints,
-} from './weather.js?v=2026-08-18-03';
+} from './weather.js?v=2026-08-18-04';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, currentPotentialPresentation, mapModePresentation,
-} from './map-modes.js?v=2026-08-18-03';
+} from './map-modes.js?v=2026-08-18-04';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-18-03';
+} from './rank-display.js?v=2026-08-18-04';
 
 const element = (id) => document.getElementById(id);
 
-export function shouldFitActivatedPackage({ wasActive, overviewMode, hasOverview }) {
-  return !wasActive && (overviewMode || !hasOverview);
+export function activatedPackageCamera({ wasActive, overviewMode, hasOverview }) {
+  return {
+    fitAll: !wasActive && (overviewMode || !hasOverview),
+    focusSelected: !wasActive,
+  };
 }
 
 export async function firstRainResult(selectedRequest, gridRequest, center) {
@@ -308,11 +311,11 @@ export function createSpotMode({
       spotPackage = value;
       index = 0;
       if (!wasActive) overviewMode = Boolean(overviewSpots?.length);
-      fitAll = shouldFitActivatedPackage({
+      ({ fitAll, focusSelected } = activatedPackageCamera({
         wasActive,
         overviewMode,
         hasOverview: Boolean(overviewSpots?.length),
-      });
+      }));
     }
     if (packageChanged || overviewChanged) {
       mapSpots = overviewMode ? overviewSpots : value.spots;
