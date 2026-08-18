@@ -14,10 +14,10 @@ import {
   loadRegionSpotPackage,
   nearestMapRegion,
   REGION_DETAIL_ZOOM,
-} from './default-spots.js?v=2026-08-18-01';
-import { createFieldMap } from './map.js?v=2026-08-18-01';
-import { createSpotMode } from './spot-mode.js?v=2026-08-18-01';
-import { createTripLogMode } from './trip-log-mode.js?v=2026-08-18-01';
+} from './default-spots.js?v=2026-08-18-02';
+import { createFieldMap } from './map.js?v=2026-08-18-02';
+import { createSpotMode } from './spot-mode.js?v=2026-08-18-02';
+import { createTripLogMode } from './trip-log-mode.js?v=2026-08-18-02';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
 
 const element = (id) => document.getElementById(id);
@@ -440,7 +440,7 @@ async function initialize() {
     render();
   }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=2026-08-18-01', {
+    navigator.serviceWorker.register('./sw.js?v=2026-08-18-02', {
       updateViaCache: 'none',
     }).catch(() => {});
   }

@@ -1,12 +1,12 @@
 import {
   fetchRainGrid, fetchRainHistory, nearestWeatherSample, weatherGridPoints,
-} from './weather.js';
+} from './weather.js?v=2026-08-18-02';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, currentPotentialPresentation, mapModePresentation,
-} from './map-modes.js?v=2026-08-18-01';
+} from './map-modes.js?v=2026-08-18-02';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-18-01';
+} from './rank-display.js?v=2026-08-18-02';
 
 const element = (id) => document.getElementById(id);
 
