@@ -90,7 +90,7 @@
   border-left-color: #2785c7;
   background: #edf6fa;
 }
-.map-mode-badge, .moisture-legend {
+.map-mode-badge, .moisture-legend-panel {
   position: absolute;
   z-index: 500;
   top: 15px;
@@ -108,13 +108,28 @@
   backdrop-filter: blur(9px);
   pointer-events: none;
 }
-.moisture-legend {
+.moisture-legend-panel {
   display: grid;
+  gap: 6px;
   border-color: rgb(222 242 250 / 70%);
   background: rgb(26 79 103 / 90%);
   white-space: nowrap;
 }
-.moisture-legend span { margin-top: 1px; color: #c9e5f1; font-size: .56rem; font-weight: 550; }
+.moisture-legend-panel:has(.moisture-legend[hidden]) { display: none; }
+.moisture-legend { display: grid; }
+.moisture-legend > span { margin-top: 1px; color: #c9e5f1; font-size: .56rem; font-weight: 550; }
+.moisture-scale { grid-template-columns: repeat(3, auto); }
+.moisture-scale {
+  display: grid;
+  gap: 8px;
+  padding-top: 5px;
+  border-top: 1px solid rgb(222 242 250 / 35%);
+}
+.moisture-scale span { display: flex; align-items: center; gap: 4px; color: #e8f5f8; font-size: .53rem; }
+.moisture-swatch { width: 10px; height: 7px; border-radius: 2px; }
+.moisture-swatch.wet { background: #2785c7; }
+.moisture-swatch.some { background: #f0b541; }
+.moisture-swatch.dry { background: #c64f42; }
 .map-mode-badge[data-tier="strong"] { background: rgb(0 111 124 / 96%); }
 .map-mode-badge[data-tier="promising"] { color: #24302d; background: rgb(224 201 79 / 96%); }
 .map-mode-badge[data-tier="low"] { background: rgb(145 54 54 / 95%); }
@@ -321,7 +336,7 @@
     margin-top: 2px;
     padding-top: 4px;
   }
-  .map-mode-badge, .moisture-legend {
+  .map-mode-badge, .moisture-legend-panel {
     top: 12px;
     left: 110px;
     max-width: calc(100% - 174px);
@@ -329,6 +344,9 @@
     font-size: .61rem;
     transform: none;
   }
+  .moisture-legend-panel { gap: 4px; }
+  .moisture-scale { gap: 5px; padding-top: 4px; }
+  .moisture-scale span { gap: 3px; font-size: .48rem; }
   .map-lens { margin-bottom: 12px; padding: 3px; }
   .map-lens button { min-height: 38px; padding: 5px 6px; font-size: .68rem; }
   .visit-heading { gap: 8px; }
