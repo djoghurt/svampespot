@@ -1,14 +1,18 @@
 import {
   fetchRainGrid, fetchRainHistory, nearestWeatherSample, weatherGridPoints,
-} from './weather.js?v=2026-08-18-02';
+} from './weather.js?v=2026-08-18-03';
 import {
   DEFAULT_MAP_MODE, MAP_MODES, currentPotentialPresentation, mapModePresentation,
-} from './map-modes.js?v=2026-08-18-02';
+} from './map-modes.js?v=2026-08-18-03';
 import {
   formatRankSummary, formatRegionEvidence, rankTierLabel,
-} from './rank-display.js?v=2026-08-18-02';
+} from './rank-display.js?v=2026-08-18-03';
 
 const element = (id) => document.getElementById(id);
+
+export function shouldFitActivatedPackage({ wasActive, overviewMode, hasOverview }) {
+  return !wasActive && (overviewMode || !hasOverview);
+}
 
 export async function firstRainResult(selectedRequest, gridRequest, center) {
   return Promise.any([
@@ -304,7 +308,11 @@ export function createSpotMode({
       spotPackage = value;
       index = 0;
       if (!wasActive) overviewMode = Boolean(overviewSpots?.length);
-      fitAll = overviewMode || !overviewSpots;
+      fitAll = shouldFitActivatedPackage({
+        wasActive,
+        overviewMode,
+        hasOverview: Boolean(overviewSpots?.length),
+      });
     }
     if (packageChanged || overviewChanged) {
       mapSpots = overviewMode ? overviewSpots : value.spots;
