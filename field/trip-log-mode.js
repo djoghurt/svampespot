@@ -1,6 +1,6 @@
 import {
   createTripLog, createTripLogExport, tripLogStatusForSpot,
-} from './trip-log.js?v=2026-08-18-04';
+} from './trip-log.js?v=2026-08-21-01';
 import { loadPhoto, loadState, savePhoto, saveState } from './storage.js';
 
 const element = (id) => document.getElementById(id);

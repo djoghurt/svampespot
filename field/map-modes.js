@@ -2,6 +2,7 @@ export const MAP_MODES = Object.freeze({
   currentPotential: 'current-potential',
   habitat: 'habitat',
   recentMoisture: 'recent-moisture',
+  mapOnly: 'map-only',
 });
 
 export const DEFAULT_MAP_MODE = MAP_MODES.currentPotential;
@@ -31,12 +32,31 @@ const PRESENTATIONS = Object.freeze({
     showRain: true,
     allowNavigation: false,
   }),
+  [MAP_MODES.mapOnly]: Object.freeze({
+    modeLabel: 'Map only',
+    noticeTitle: '',
+    noticeBody: '',
+    showNotice: false,
+    showRain: false,
+    allowNavigation: true,
+  }),
 });
 
 export function mapModePresentation(mode) {
   const presentation = PRESENTATIONS[mode];
   if (!presentation) throw new Error(`Unknown map mode: ${mode}`);
   return { ...presentation };
+}
+
+export function mapOverlayVisibility(mode) {
+  mapModePresentation(mode);
+  const mapOnly = mode === MAP_MODES.mapOnly;
+  return {
+    spots: !mapOnly,
+    publicLand: !mapOnly,
+    weather: mode === MAP_MODES.recentMoisture,
+    tripLogs: !mapOnly,
+  };
 }
 
 const CURRENT_POTENTIAL_COLOURS = Object.freeze({
@@ -96,4 +116,4 @@ export function moistureOverlayStyle(label) {
     interactive: false,
   };
 }
-import { formatHabitatStanding } from './rank-display.js?v=2026-08-18-04';
+import { formatHabitatStanding } from './rank-display.js?v=2026-08-21-01';

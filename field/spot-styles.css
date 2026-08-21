@@ -53,7 +53,7 @@
 
 .map-lens {
   display: grid;
-  grid-template-columns: 1.3fr .8fr 1.3fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
   margin: -7px 0 18px;
   padding: 4px;

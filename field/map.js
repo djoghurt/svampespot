@@ -1,7 +1,7 @@
 import {
-  MAP_MODES, currentPotentialStyle, moistureOverlayStyle,
-} from './map-modes.js?v=2026-08-18-04';
-import { formatHabitatStanding, rankTierStyle } from './rank-display.js?v=2026-08-18-04';
+  MAP_MODES, currentPotentialStyle, mapOverlayVisibility, moistureOverlayStyle,
+} from './map-modes.js?v=2026-08-21-01';
+import { formatHabitatStanding, rankTierStyle } from './rank-display.js?v=2026-08-21-01';
 
 export function createFieldMap(element) {
   const map = L.map(element, { zoomControl: false, attributionControl: true })
@@ -113,7 +113,8 @@ export function createFieldMap(element) {
 
   function renderTripLogs() {
     if (tripLogLayer) map.removeLayer(tripLogLayer);
-    tripLogLayer = L.layerGroup().addTo(map);
+    tripLogLayer = L.layerGroup();
+    if (mapOverlayVisibility(displayMode).tripLogs) tripLogLayer.addTo(map);
     const visible = new Map();
     tripLogs.forEach((log) => {
       if (!spotLayersById.has(log.spot_id) || !Array.isArray(log.spot_center)) return;
@@ -257,6 +258,17 @@ export function createFieldMap(element) {
   function setDisplayMode(mode) {
     displayMode = mode;
     restyleSpots();
+    const visibility = mapOverlayVisibility(mode);
+    [
+      [spotLayer, visibility.spots],
+      [publicLandLayer, visibility.publicLand],
+      [weatherLayer, visibility.weather],
+      [tripLogLayer, visibility.tripLogs],
+    ].forEach(([layer, visible]) => {
+      if (!layer) return;
+      if (visible && !map.hasLayer(layer)) layer.addTo(map);
+      if (!visible && map.hasLayer(layer)) map.removeLayer(layer);
+    });
   }
 
   function showCurrentPotential(values) {
@@ -273,7 +285,8 @@ export function createFieldMap(element) {
 
   function showWeatherGrid(samples) {
     clearWeatherRegion();
-    weatherLayer = L.layerGroup().addTo(map);
+    weatherLayer = L.layerGroup();
+    if (mapOverlayVisibility(displayMode).weather) weatherLayer.addTo(map);
     samples.forEach((sample) => {
       L.rectangle(sample.bounds, {
         ...moistureOverlayStyle(sample.label),
